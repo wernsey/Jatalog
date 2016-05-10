@@ -1,0 +1,16 @@
+edge(a, b).
+edge(a, c).
+edge(b, d).
+edge(c, d).
+edge(d, e).
+edge(f, e).
+
+path(X, Y) :- edge(X, Y).
+path(X, Y) :- path(X, Z), path(Z, Y).
+
+% Example of invalid rule:
+% foo(A, B) :- edge(A, A).
+
+path(a, b)?
+path(f, a)?
+path(a, X), path(X, d)?

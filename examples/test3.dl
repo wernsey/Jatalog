@@ -1,0 +1,31 @@
+parent(alice, bob).
+parent(alice, bill).
+parent(bob, carol).
+parent(carol, dennis).
+parent(carol, david).
+
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- ancestor(X, Z), ancestor(Z, Y).
+family(X, Y) :- ancestor(X, Y).
+family(X, Y) :- family(Y, X).
+
+
+family(X, Y)?
+family(alice, Y)?
+family(alex, Y)?
+ancestor(bob, Y)?
+
+age(alice, 30.00).
+age(alice, Age)?
+age(bob, 40.500).
+age(bob, Age)?
+weight(bob, 100.567000).
+weight(bob, Weight)?
+
+address(bob, "10 someplace, somewhere").
+address(bob, Address)?
+address(carol, '123 "somestreet", sometown').
+address(carol, Address)?
+
+details(X, Age, Address, Weight) :- age(X, Age), address(X, Address), weight(X, Weight).
+details(bob, Age, Address, Weight)?

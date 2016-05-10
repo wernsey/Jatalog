@@ -1,0 +1,32 @@
+parent(alice, bob).
+parent(alice, bart).
+parent(alice, betty).
+
+sibling(X, Y) :- parent(A, X), parent(A, Y), X <> Y.
+
+sibling(A,B)?
+sibling(bob,B)?
+
+num(a, 1).
+num(b, 2).
+num(c, 3).
+num(d, 4).
+num(e, 5).
+num(f, 6).
+num(g, 7).
+num(h, 8).
+num(i, 9).
+num(j, 10).
+num(k, 11).
+num(l, 12).
+num(m, 13).
+num(n, 14).
+
+num(N, V), V < 5?
+num(N, V), V <= 5?
+num(N, V), V > 5?
+num(N, V), V >= 5?
+
+p(a). q(a). p(b). q(c).
+p(X), X <> Y, q(Y)?
+p(X), X = Y, q(Y)?

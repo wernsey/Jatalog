@@ -1,0 +1,127 @@
+% Complexer family tree example.
+
+% ========== Facts ==========
+
+married(adam, alice).
+male(adam).
+worksat(adam, abcelectric).
+female(alice).
+worksat(alice, xyzcars).
+child(bart, adam).
+male(bart).
+worksat(bart, pqrrailroad).
+child(beth, adam).
+female(beth).
+worksat(beth, rstbank).
+
+married(albert, anne).
+male(albert).
+worksat(albert, rstbank).
+female(anne).
+retired(anne).
+child(bert, albert).
+male(bert).
+worksat(bert, xyzcars).
+married(beth, bert).
+child(carl, bert).
+male(carl).
+retired(carl).
+child(carol, beth).
+female(carol).
+
+child(dolly, carol).
+female(dolly).
+child(daisy, carl).
+female(daisy).
+
+married(dolly, dupont).
+male(dupont).
+child(edgar, dolly).
+male(edgar).
+worksat(edgar, abcelectric).
+child(elvin, dolly).
+male(elvin).
+
+married(elvin, elisa).
+female(elisa).
+worksat(elisa, xyzcars).
+child(elisa, dorothy).
+female(dorothy).
+worksat(dorothy, abcelectric).
+child(dorothy, chris).
+male(chris).
+married(chris, constance).
+female(constance).
+child(constance, bethany).
+female(bethany).
+worksat(bethany, xyzcars).
+child(dieter, constance).
+male(dieter).
+worksat(dieter, pqrrailroad).
+
+married(bart, betty).
+female(betty).
+worksat(betty, pqrrailroad).
+child(betty, abe).
+male(abe).
+retired(abe).
+married(abe, abeline).
+worksat(abeline, abcelectric).
+child(cobus, betty).
+male(cobus).
+child(connie, bart).
+female(connie).
+
+child(dwight, connie).
+male(dwight).
+child(dwayne, connie).
+male(dwayne).
+
+% ========== Rules ==========
+
+person(X) :- male(X).
+person(X) :- female(X).
+married(Me, Spouse) :- married(Spouse, Me).
+child(Child, Parent) :- child(Child, Spouse), married(Parent, Spouse).
+parent(Parent, Child) :- child(Child, Parent).
+sibling(Me, Who) :- parent(Parent, Me), parent(Parent, Who), Me <> Who.
+brother(Me, He) :- sibling(Me, He), male(He).
+sister(Me, She) :- sibling(Me, She), female(She).
+ancestor(Ancestor, Descendant) :- parent(Ancestor, Descendant).
+ancestor(Ancestor, Descendant) :- ancestor(Ancestor, X), parent(X, Descendant).
+descendant(Descendant, Ancestor) :- ancestor(Ancestor, Descendant).
+father(Father, Child) :- parent(Father, Child), male(Father).
+mother(Mother, Child) :- parent(Mother, Child), female(Mother).
+grandparent(Grandparent, Grandchild) :- parent(Grandparent, Parent), parent(Parent, Grandchild).
+grandfather(Grandfather, Grandchild) :- grandparent(Grandfather, Grandchild), male(Grandfather).
+grandmother(Grandmother, Grandchild) :- grandparent(Grandmother, Grandchild), female(Grandmother).
+cousin(Me, Who) :- grandparent(Grandparent, Me), grandparent(Grandparent, Who), Me <> Who.
+related(Me, Who) :- ancestor(Ancestor, Me), ancestor(Ancestor, Who).
+employed(Who) :- worksat(Who, Company).
+unemployed(Who) :- person(Who), not employed(Who), not retired(Who).
+
+% ========== Queries ==========
+
+married(alice, Spouse)?
+child(Child, alice)?
+
+% as configured, people are their own siblings because I can't put 'Me != Who' in the rules (yet)
+%sibling(Me, Who)?
+brother(Me, Brother)?
+
+descendant(Descendant, adam)?
+father(adam, Child)?
+mother(Mother, carl)?
+grandfather(Grandfather, carol)?
+grandmother(Grandmother, carl)?
+grandparent(Grandparent, connie), female(Grandparent)?
+cousin(connie, Cousin)?
+
+% These queries have yes/no answers
+related(cobus, beth)?
+related(bart, albert)?
+related(connie, carl)?
+
+worksat(Worker, Company)?
+employed(Employed)?
+unemployed(Unemployed)?

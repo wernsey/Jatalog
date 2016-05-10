@@ -1,0 +1,11 @@
+% Stratified/non-stratified example from [alec]
+
+r(X) :- p(X), not q(X).
+q(X) :- not v(X), e(X).
+p(X) :- not s(X), e(X).
+
+% Comment out these lines to stratify the program
+%v(X) :- t(X).
+%t(X) :- q(X).
+
+r(A)?

@@ -1,0 +1,13 @@
+p(a, b).
+p(a, c).
+p(c, d).
+p(b, d).
+p(e, d).
+r(a).
+r(d).
+r(e).
+q(X,Y) :- p(X,Y).
+q(X,Y) :- q(X,Z), p(Z,Y).
+q(P, Q)?
+s(X, Y) :- r(X), r(Y), not q(X, Y), X <> Y.
+s(X, Y)?

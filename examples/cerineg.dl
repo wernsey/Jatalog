@@ -1,0 +1,17 @@
+% Negation example from Section VI-C [ceri]
+p(X, Y) :- not q(X, Y), s(X, Y).
+q(X, Y) :- q(X, Z), q(Z, Y).
+q(X, Y) :- d(X, Y), not r(X, Y).
+r(X, Y) :- d(Y, X).
+s(X, Y) :- q(X, Z), q(Y, T), X != Y.
+
+d(a,b). d(b,c). d(e,e).
+
+%r(X,Y) :- s(Y,X).
+
+r(A, B)?
+q(A, B)?
+s(A, B)?
+p(A, B)?
+
+p(A,Y), 5 > g?
