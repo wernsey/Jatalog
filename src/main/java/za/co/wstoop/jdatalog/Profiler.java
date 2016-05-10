@@ -7,16 +7,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/* Profiling class.
-I had to write my own because I didn't want to pull in any external dependencies.
-`buckets` maps the name of a bucket to a List of elapsed times so that you can have
-multiple timers under different names.
-*/
+/** Profiling class.
+ * I had to write my own because I didn't want to pull in any external dependencies. 
+ * {@code buckets} maps the name of a bucket to a List of elapsed times so that you can have multiple timers under different names.
+ * TODO: The Profiler is obsolete. Remove it.
+ */
 class Profiler {
 
-    // FYI: Java 8 actually has Instant and Duration classes.
-    // Not sure whether they're really useful here, though.
-
+	/**
+	 * Internal class to track the start time of a profiled event.
+	 */
     static class Timer {
         private long start;
         private List<Long> bucket;

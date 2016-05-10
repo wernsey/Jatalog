@@ -5,23 +5,30 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
-/* Map<> implementation that has a parent Map<> where it looks up a value if the value is not in `this`. Its behaviour is equivalent
-    to a HashMap that is passed a parent map in its constructor, except that it keeps a reference to the parent map rather than
-    copying it. It never modifies the parent map. (If the behaviour deviates from this, it is a bug and must be fixed)
-    Internally, it has two maps: `self` and `parent`. The `get()` method will look up a key in self and if it doesn't find it, looks
-    for it in `parent`. The `put()` method always adds values to `self`. The parent in turn may also be a StackMap, so some method
-    calls may be recursive. The `flatten()` method combines the map with its parents into a single one.
-    It is used by JDatalog for the scoped contexts where the variable bindings enter and leave scope frequently during the
-    recursive building of the database, but where the parent Map<> needs to be kept for subsequent recursions.
-    Methods like entrySet(), keySet() and values() are required by the Map<> interface that their returned collections be backed
-    by the Map<>. Therefore, their implementations here will flatten the map first. Once these methods are called StackMap just
-    becomes a wrapper around the internal HashMap, hence JDatalog avoids these methods internally.
-    The remove() method also flattens `this` to avoid modifying the parent while and the clear() method just sets parent to null
-    and clears `self` .
-    I've tried a version that extends AbstractMap, but it proved to be significantly slower.
-*/
+/** Map&lt;&gt; implementation that has a parent Map&lt;&gt; where it looks up a value if the value is not in {@code this}. 
+ * <p>
+ * Its behaviour is equivalent to a HashMap that is passed a parent map in its constructor, except that it keeps a reference 
+ * to the parent map rather than copying it. It never modifies the parent map. (If the behaviour deviates from this, it is a bug 
+ * and must be fixed).
+ * </p><p>
+ * Internally, it has two maps: {@code self} and {@code parent}. The {@link #get()} method will look up a key in self and if it doesn't find it, looks
+ * for it in {@code parent}. The {@link #put()} method always adds values to {@code self}. The parent in turn may also be a StackMap, so some method
+ * calls may be recursive. The {@link #flatten()} method combines the map with its parents into a single one.
+ * </p><p>
+ * It is used by JDatalog for the scoped contexts where the variable bindings enter and leave scope frequently during the
+ * recursive building of the database, but where the parent Map&lt;&gt; needs to be kept for subsequent recursions.
+ * </p><p>
+ * Methods like {@link #entrySet()}, {@link #keySet()} and {@link #values()} are required by the Map&lt;&gt; interface that their returned collections be backed
+ * by the Map&lt;&gt;. Therefore, their implementations here will flatten the map first. Once these methods are called StackMap just
+ * becomes a wrapper around the internal HashMap, hence JDatalog avoids these methods internally.
+ * </p><p>
+ * The {@link #remove()} method also flattens {@code this} to avoid modifying the parent while and the {@link #clear()} method just sets parent to null
+ * and clears {@code self}.
+ * </p><p>
+ * I've tried a version that extends {@code AbstractMap}, but it proved to be significantly slower.
+ * </p>
+ */
 class StackMap<K,V> implements Map<K,V> {
     private Map<K,V> self;
     private Map<K,V> parent;
@@ -36,7 +43,13 @@ class StackMap<K,V> implements Map<K,V> {
         this.parent = parent;
     }
 
-    Map<K,V> flatten() {
+    /**
+     * Returns a new Map&lt;K,V&gt> that contains all the elements of this map,
+     * but does not have a parent anymore.
+     * The returned map is actually a {@code java.util.HashMap}.
+     * @return
+     */
+    public Map<K,V> flatten() {
         Map<K,V> map = new HashMap<K,V>();
         // I don't use map.putAll(this) to avoid relying on entrySet()
         if(parent != null) {

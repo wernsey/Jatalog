@@ -5,8 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import za.co.wstoop.jdatalog.JDatalog.DatalogException;
-
+/**
+ * Represents a Datalog expression.
+ * An expression is a predicate followed by zero or more terms, in the form {@code pred(term1, term2, term3...)}
+ */
 public class Expr {
 
     String predicate;
@@ -14,6 +16,11 @@ public class Expr {
 
     protected boolean negated = false;
 
+    /**
+     * Standard constructor that accepts a predicate and a list of terms.
+     * @param predicate The predicate of the expression.
+     * @param terms The terms of the expression.
+     */
     public Expr(String predicate, List<String> terms) {
         this.predicate = predicate;
         // I've seen both versions of the symbol for not equals being used, so I allow
@@ -24,14 +31,31 @@ public class Expr {
         this.terms = terms;
     }
 
+    /**
+     * Constructor for the fluent API that allows a variable number of terms.
+     * @param predicate The predicate of the expression.
+     * @param terms The terms of the expression.
+     */
     public Expr(String predicate, String... terms) {
         this(predicate, Arrays.asList(terms));
     }
 
+    /**
+     * The arity of an expression is simply the number of terms.
+     * For example, an expression {@code foo(bar, baz, fred)} has an arity of 3 and is sometimes 
+     * written as {@code foo/3}.
+     * It is expected that the arity of facts with the same predicate is the same, although JDatalog 
+     * does not enforce it (expressions with the same predicates but different arities wont unify).
+     * @return the arity
+     */
     public int arity() {
         return terms.size();
     }
 
+    /**
+     * An expression is said to be ground if none of its terms are variables.
+     * @return true if the expression is ground
+     */
     public boolean isGround() {
         for(String term : terms) {
             if(JDatalog.isVariable(term))
@@ -40,21 +64,46 @@ public class Expr {
         return true;
     }
 
+    /**
+     * Checks whether the expression is negated, eg. {@code not foo(bar, baz)}
+     * @return true if the expression is negated
+     */
     public boolean isNegated() {
         return negated;
     }
 
+    /**
+     * Checks whether an expression represents one of the supported built-in predicates.
+     * JDatalog supports several built-in operators: =, &lt;&gt;, &lt;, &lt;=, &gt;, &gt;=. 
+     * These are represented internally as expressions with the operator in the predicate and the operands
+     * in the terms. Thus, a clause like {@code X > 100} is represented internally as {@code ">"(X, 100)}.
+     * If the engine encounters one of these predicates it calls {@link #evalBuiltIn(Map)} rather than unifying
+     * it against the goals. 
+     * @return true if the expression is a built-in predicate.
+     */
     public boolean isBuiltIn() {
         char op = predicate.charAt(0);
         return !Character.isLetterOrDigit(op) && op != '\"';
     }
 
+    /**
+     * Static method for constructing negated expressions in the fluent API
+     * @param predicate The predicate of the expression
+     * @param terms The terms of the expression
+     * @return The negated expression
+     */
     public static Expr not(String predicate, String... terms) {
         Expr e = new Expr(predicate, terms);
         e.negated = true;
         return e;
     }
 
+    /**
+     * Unifies {@code this} expression with another expression.
+     * @param that The expression to unify with
+     * @param bindings The bindings of variables to values after unification
+     * @return true if the expressions unify.
+     */
     boolean unify(Expr that, Map<String, String> bindings) {
         if(!this.predicate.equals(that.predicate) || this.arity() != that.arity()) {
             return false;
@@ -83,6 +132,11 @@ public class Expr {
         return true;
     }
 
+    /**
+     * Substitutes the variables in this expression with bindings from a unification.
+     * @param bindings The bindings to substitute.
+     * @return A new expression with the variables replaced with the values in bindings.
+     */
     Expr substitute(Map<String, String> bindings) {
         // that.terms.add() below doesn't work without the new ArrayList()
         Expr that = new Expr(this.predicate, new ArrayList<>());
@@ -102,6 +156,12 @@ public class Expr {
         return that;
     }
 
+    /**
+     * Evaluates a built-in predicate.
+     * @param bindings 
+     * @return true if the operator matched.
+     * @throws DatalogException for a variety of possible errors.
+     */
     boolean evalBuiltIn(Map<String, String> bindings) throws DatalogException {
         //System.out.println("EVAL " + this + "; " + bindings);
         String term1 = terms.get(0);

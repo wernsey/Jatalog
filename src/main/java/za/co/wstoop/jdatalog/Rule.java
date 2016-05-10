@@ -6,24 +6,50 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import za.co.wstoop.jdatalog.JDatalog.DatalogException;
-
+/**
+ * Class that represents a Datalog rule.
+ * A rule has a head that is an expression and a body that is a list of expressions.
+ * It takes the form {@code foo(X, Y) :- bar(X, Y), baz(X), fred(Y)}
+ * @see Expr
+ */
 public class Rule {
 
 	Expr head;
 	List<Expr> body;
 
-	Rule(Expr head, List<Expr> body) {
+	/**
+	 * Constructor that takes an expression as the head of the rule and a list of expressions as the body.
+	 * The expressions in the body may be reordered to be able to evaluate rules correctly.
+	 * @param head The head of the rule (left hand side)
+	 * @param body The list of expressions that make up the body of the rule (right hand side)
+	 */
+	public Rule(Expr head, List<Expr> body) {
 		this.head = head;
 
 		this.body = JDatalog.reorderQuery(body);
 	}
 
-	Rule(Expr head, Expr... body) {
+	/**
+	 * Constructor for the fluent API that allows a variable number of expressions in the body.
+	 * The expressions in the body may be reordered to be able to evaluate rules correctly.
+	 * @param head The head of the rule (left hand side)
+	 * @param body The list of expressions that make up the body of the rule (right hand side)
+	 */
+	public Rule(Expr head, Expr... body) {
 		this(head, Arrays.asList(body));
 	}
 
-	void validate() throws DatalogException {
+	/**
+	 * Checks whether a rule is valid.
+	 * There are a variety of reasons why a rule may not be valid:
+	 * <ul>
+	 * <li> Each variable in the head of the rule <i>must</i> appear in the body.
+	 * <li> Each variable in the body of a rule should appear at least once in a positive (that is non-negated) expression.
+	 * <li> Variables that are used in built-in predicates must appear at least once in a positive expression.
+	 * </ul>
+	 * @throws DatalogException if the rule is not valid, with the reason in the message.
+	 */
+	public void validate() throws DatalogException {
 
 		Set<String> headVars = head.terms.stream()
 			.filter(term -> JDatalog.isVariable(term))

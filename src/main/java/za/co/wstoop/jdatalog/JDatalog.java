@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Main entrypoint for the JDatalog engine.
+ */
 public class JDatalog {
 
     private List<Expr> edb;         // Facts
@@ -64,19 +67,54 @@ public class JDatalog {
     }
 
     // Methods for the fluent interface
+    
+    /**
+     * Adds a new {@link Rule} to the IDB database.
+     * This is part of the fluent API.
+     * @param head The head of the rule
+     * @param body The expressions that make up the body of the rule.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the rule is invalid.
+     */
     public JDatalog rule(Expr head, Expr... body) throws DatalogException {
         Rule newRule = new Rule(head, body);
         return rule(newRule);
     }
+    
+    /**
+     * Adds a new rule to the IDB database.
+     * This is part of the fluent API.
+     * @param newRule the rule to add.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the rule is invalid.
+     */
     public JDatalog rule(Rule newRule) throws DatalogException {
         newRule.validate();
         idb.add(newRule);
         return this;
     }
 
+    /**
+     * Adds a new fact to the EDB database.
+     * This is part of the fluent API.
+     * @param predicate The predicate of the fact. 
+     * @param terms the terms of the fact.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
+     * 	cannot be {@link Expr#isNegated() negated}
+     */
     public JDatalog fact(String predicate, String... terms) throws DatalogException {
         return fact(new Expr(predicate, terms));
     }
+    
+    /**
+     * Adds a new fact to the EDB database.
+     * This is part of the fluent API.
+     * @param newFact The fact to add.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
+     * 	cannot be {@link Expr#isNegated() negated}
+     */
     public JDatalog fact(Expr newFact) throws DatalogException {
         if(!newFact.isGround()) {
             throw new DatalogException("Facts must be ground: " + newFact);
@@ -90,40 +128,14 @@ public class JDatalog {
         return this;
     }
 
-    /* If you're executing a file that may contain multiple queries, you can pass
-    #execute(Reader, QueryOutput) a QueryOutput object that will be used to display
-    all the results from the separate queries, with their goals.
-    Otherwise #execute(Reader, QueryOutput) will just return the answers from the
-    last query. */
-    public static interface QueryOutput {
-        public void writeResult(List<Expr> goals, Collection<Map<String, String>> answers);
-    }
-
-    /* Default implementation of QueryOutput */
-    public static class StandardQueryOutput implements QueryOutput {
-        @Override
-        public void writeResult(List<Expr> goals, Collection<Map<String, String>> answers) {
-            Profiler.Timer timer = Profiler.getTimer("output");
-            try {
-                System.out.println(JDatalog.toString(goals) + "?");
-                if(!answers.isEmpty()){
-                    if(answers.iterator().next().isEmpty()) {
-                        System.out.println("  Yes.");
-                    } else {
-                        for(Map<String, String> answer : answers) {
-                            System.out.println("  " + JDatalog.toString(answer));
-                        }
-                    }
-                } else {
-                    System.out.println("  No.");
-                }
-            } finally {
-                timer.stop();
-            }
-        }
-    }
-
-    /* Executes all the statements in a file/string/whatever the Reader is wrapping */
+  
+    /**
+     * Executes all the statements in a file/string or another object wrapped by a {@code java.io.Reader}.
+     * @param reader The reader from which the statements are read.
+     * @param output The object through which output should be written. Can be {@code null} in which case no output will be written.
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * @throws DatalogException on syntax and I/O errors encountered while executing. 
+     */
     public Collection<Map<String, String>> execute(Reader reader, QueryOutput output) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("execute");
         try {
@@ -378,20 +390,12 @@ public class JDatalog {
         return numberPattern.matcher(str).matches();
     }
 
-    /* Normal Datalog exception. */
-    static class DatalogException extends Exception {
-        private static final long serialVersionUID = 1L;
-        public DatalogException(String message) {
-            super(message);
-        }
-        public DatalogException(Exception cause) {
-            super(cause);
-        }
-        public DatalogException(String message, Exception cause) {
-            super(message, cause);
-        }
-    }
-
+    /**
+     * Executes a Datalog statement
+     * @param statement the statement to execute as a string
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * @throws DatalogException on syntax errors encountered while executing. 
+     */
     public Collection<Map<String, String>> query(String statement) throws DatalogException {
         // It would've been fun to wrap the results in a java.sql.ResultSet, but damn,
         // those are a lot of methods to implement:
@@ -400,11 +404,24 @@ public class JDatalog {
         return execute(reader, null);
     }
 
+    /**
+     * Executes a query with the specified goals against the database.
+     * This is part of the fluent API.
+     * @param goals The goals of the query.
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * @throws DatalogException on syntax errors encountered while executing. 
+     */
     public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
         return query(Arrays.asList(goals));
     }
 
-    public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
+    /**
+     * Executes a query with the specified goals against the database.
+     * @param goals The list of goals of the query.
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * @throws DatalogException on syntax errors encountered while executing. 
+     */
+     public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("query");
         try {
             if(goals.isEmpty())
@@ -482,6 +499,7 @@ public class JDatalog {
         }
     }
 
+    /* TODO: write documentation for this */
     private Collection<Rule> getDependantRules(Collection<Expr> facts, Map<String, Collection<Rule>> dependants) {
         Profiler.Timer timer = Profiler.getTimer("getDependantRules");
         try {
@@ -498,6 +516,9 @@ public class JDatalog {
         }
     }
 
+    /* The core of the bottom-up implementation:
+     * It computes the stratification of the rules in the EDB and then expands each
+     * strata in turn, returning a collection of newly derived facts. */
     private Collection<Expr> buildDatabase(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
         Profiler.Timer timer = Profiler.getTimer("buildDatabase");
         try {
@@ -515,6 +536,9 @@ public class JDatalog {
         }
     }
 
+    /* Computes the stratification of the rules in the IDB by doing a depth-first search.
+     * It throws a DatalogException if there are negative loops in the rules, in which case the
+     * rules aren't stratified and cannot be computed. */
     private List< Collection<Rule> > computeStratification(Collection<Rule> allRules) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("computeStratification");
         try {
@@ -545,6 +569,7 @@ public class JDatalog {
         }
     }
 
+    /* The recursive depth-first method that computes the stratification of a set of rules */
     private int depthFirstSearch(Expr goal, Collection<Rule> graph, List<Expr> visited, int level) throws DatalogException {
         String pred = goal.predicate;
 
@@ -585,6 +610,12 @@ public class JDatalog {
         return m;
     }
 
+    /* This implements the semi-naive part of the evaluator.
+     * For all the rules derive a collection of new facts; Repeat until no new
+     * facts can be derived.
+     * The semi-naive part is to only use the rules that are affected by newly derived
+     * facts in each iteration of the loop.
+     */
     private Collection<Expr> expandStrata(Set<Expr> facts, Collection<Rule> strataRules) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("expandStrata");
         try {
@@ -632,6 +663,7 @@ public class JDatalog {
         }
     }
 
+    /* Match the facts in the EDB against a specific rule */
     private Set<Expr> matchRule(final Collection<Expr> facts, Rule rule) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("matchRule");
         try {
@@ -652,6 +684,8 @@ public class JDatalog {
         }
     }
 
+    /* Match the goals in a rule to the facts in the database (recursively). 
+     * If the goal is a built-in predicate, it is also evaluated here. */
     private Collection<Map<String, String>> matchGoals(List<Expr> goals, final Collection<Expr> facts, Map<String, String> bindings) throws DatalogException {
 
         Expr goal = goals.get(0); // First goal; Assumes goals won't be empty
@@ -728,11 +762,22 @@ public class JDatalog {
         return answers;
     }
 
-    public boolean delete(Expr... facts) throws DatalogException {
-        return delete(Arrays.asList(facts));
+    /**
+     * Deletes all the facts in the database that matches a specific query 
+     * @param goals The query to which to match the facts.
+     * @return true if any facts were deleted.
+     * @throws DatalogException on errors encountered during evaluation.
+     */
+    public boolean delete(Expr... goals) throws DatalogException {
+        return delete(Arrays.asList(goals));
     }
 
-    /* Queries a set of goals and deletes all the facts that matches the query */
+    /**
+     * Deletes all the facts in the database that matches a specific query 
+     * @param goals The query to which to match the facts.
+     * @return true if any facts were deleted.
+     * @throws DatalogException on errors encountered during evaluation.
+     */
     public boolean delete(List<Expr> goals) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("delete");
         try {
@@ -750,6 +795,10 @@ public class JDatalog {
         }
     }
 
+    /**
+     * Validates all the rules and facts in the database.
+     * @throws DatalogException If any rules or facts are invalid. The message contains the reason.
+     */
     public void validate() throws DatalogException {
         for(Rule rule : idb) {
             rule.validate();
@@ -781,7 +830,11 @@ public class JDatalog {
         }
     }
 
-    public void dump(PrintStream out) throws DatalogException {
+    /**
+     * Dumps the contents of the database to a output stream
+     * @param out where to write the output to
+     */
+    public void dump(PrintStream out) {
         out.println("% Facts:");
         for(Expr fact : edb) {
             out.println(fact + ".");
@@ -793,13 +846,13 @@ public class JDatalog {
     }
 
     static void debug(String message) {
-        // I'm not happy with this. Remove later.
+        // TODO: I'm not happy with this. Remove later.
         if(debugEnable) {
             System.out.println(message);
         }
     }
 
-    static String toString(Collection<?> collection) {
+    public static String toString(Collection<?> collection) {
         StringBuilder sb = new StringBuilder("[");
         for(Object o : collection)
             sb.append(o.toString()).append(". ");
@@ -807,7 +860,7 @@ public class JDatalog {
         return sb.toString();
     }
 
-    static String toString(Map<String, String> bindings) {
+    public static String toString(Map<String, String> bindings) {
         StringBuilder sb = new StringBuilder("{");
         int s = bindings.size(), i = 0;
         for(String k : bindings.keySet()) {
@@ -825,10 +878,12 @@ public class JDatalog {
         return sb.toString();
     }
 
+    // TODO: The benchmarking is obsolete. Remove it.
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
     static final int NUM_RUNS = 1000;
 
+    // TODO: Move this to a separate REPL class
     public static void main(String... args) {
 
         if(args.length > 0) {
