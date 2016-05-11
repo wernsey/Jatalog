@@ -8,7 +8,7 @@
 * It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
 * It avoids third party dependencies because it is a proof-of-concept. It should be able to stand alone.
 * Values with "quoted strings" are supported, but to prevent a value like "Hello World" from being confused with a variable, it is stored internally with a " prefix, i.e. "Hello" is stored as `"Hello`. 
-	This is why the `toString(Map<String, String> bindings)` method uses `substring(1)` on the term.
+    This is why the `toString(Map<String, String> bindings)` method uses `substring(1)` on the term.
 * Also, predicates can't be in quotes. Is this a desirable feature?
 
 ## Changes
@@ -26,6 +26,10 @@
 
 ## Usage
 
+### With Maven
+
+The prefered method of building JDatalog is through [Maven](https://maven.apache.org/).
+
     # Compile like so:
     mvn package
     
@@ -35,25 +39,37 @@
     # Run like so:
     java -jar target\jdatalog-0.0.1-SNAPSHOT.jar [filename]
     
+### With Ant
+
+An [Ant](http://ant.apache.org/) build.xml file is also provided:
+
+    # Compile like so:
+    ant 
     
+    # Generate Javadocs
+    ant docs
+    
+    # Run like so:
+    java -jar dist\jdatalog-0.0.1.jar
+
 
 ## License
 
 JDatalog is licensed under the [Apache license version 2](http://www.apache.org/licenses/LICENSE-2.0):
 
-	Copyright 2015-2016 Werner Stoop
-	
-	Licensed under the Apache License, Version 2.0 (the "License");
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
-	
-	    http://www.apache.org/licenses/LICENSE-2.0
-	
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
+    Copyright 2015-2016 Werner Stoop
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 
 ## References:
 
@@ -68,20 +84,20 @@ JDatalog is licensed under the [Apache license version 2](http://www.apache.org/
 * [davi]  Inference in Datalog; Ernest Davis, http://cs.nyu.edu/faculty/davise/ai/datalog.html
 * [gree]  Datalog and Recursive Query Processing; Todd J. Green, Shan Shan Huang, Boon Thau Loo and Wenchao Zhou
             Foundations and Trends in Databases Vol. 5, No. 2 (2012) 105–195, 2013
-			http://blogs.evergreen.edu/sosw/files/2014/04/Green-Vol5-DBS-017.pdf
+            http://blogs.evergreen.edu/sosw/files/2014/04/Green-Vol5-DBS-017.pdf
 * [bra2]  Bottom-Up Query Evaluation in Extended Deductive Databases, Stefan Brass, 1996
-			https://www.deutsche-digitale-bibliothek.de/binary/4ENXEC32EMXHKP7IRB6OKPBWSGJV5JMJ/full/1.pdf
+            https://www.deutsche-digitale-bibliothek.de/binary/4ENXEC32EMXHKP7IRB6OKPBWSGJV5JMJ/full/1.pdf
 * [sund]  Datalog Evaluation Algorithms, Dr. Raj Sunderraman, 1998
-			http://tinman.cs.gsu.edu/~raj/8710/f98/alg.html
+            http://tinman.cs.gsu.edu/~raj/8710/f98/alg.html
 * [ull1]  Lecture notes: Datalog Rules Programs Negation; Jeffrey D. Ullman;
-			http://infolab.stanford.edu/~ullman/cs345notes/cs345-1.ppt
+            http://infolab.stanford.edu/~ullman/cs345notes/cs345-1.ppt
 * [ull2]  Lecture notes: Datalog Logical Rules Recursion; Jeffrey D. Ullman;
-			http://infolab.stanford.edu/~ullman/dscb/pslides/dlog.ppt
+            http://infolab.stanford.edu/~ullman/dscb/pslides/dlog.ppt
 * [meye]  Prolog in Python, Chris Meyers, http://www.openbookproject.net/py4fun/prolog/intro.html
 * [alec]  G53RDB Theory of Relational Databases Lecture 14; Natasha Alechina;
-			http://www.cs.nott.ac.uk/~psznza/G53RDB07/rdb14.pdf
+            http://www.cs.nott.ac.uk/~psznza/G53RDB07/rdb14.pdf
 * [rack]  Datalog: Deductive Database Programming, Jay McCarthy, https://docs.racket-lang.org/datalog/
-			(Datalog library for the Racket language)
+            (Datalog library for the Racket language)
 
 ## Ideas and Notes
 
@@ -140,4 +156,5 @@ I've decided against arithmetic built-in predicates, such as plus(X,Y,Z) => X + 
 
 * Arithmetic predicates aren't that simple. They should be evaluated as soon as the input variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
 * Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of `Expr` was a `List<Object>` - see my note above.
-	
+
+    

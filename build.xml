@@ -1,0 +1,41 @@
+<project name="jdatalog" default="dist" basedir=".">
+	<description>Java Datalog Engine with Stratified Negation</description>
+
+	<property name="version" value="0.0.1"/>
+	<property name="src" location="src/main/java"/>
+	<property name="test" location="src/test/java"/>
+	<property name="build" location="build"/>
+	<property name="dist" location="dist"/>
+	<property name="docs" location="docs"/>
+
+	<target name="init">
+		<tstamp/>
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" destdir="${build}" />
+	</target>
+
+	<target name="docs" >
+		<mkdir dir="${docs}"/>
+		<javadoc sourcepath="${src}" destdir="${docs}">
+		</javadoc>
+	</target>
+
+	<target name="dist" depends="compile">
+		<mkdir dir="${dist}"/>
+		<jar jarfile="${dist}/jdatalog-${version}.jar" basedir="${build}">
+			<manifest>
+				<attribute name="Main-Class" value="za.co.wstoop.jdatalog.Shell"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+		<delete dir="${docs}"/>
+	</target>
+
+</project>

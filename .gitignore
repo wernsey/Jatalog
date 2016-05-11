@@ -1,4 +1,9 @@
+# Maven target directory
 target
+
+# Ant target directorries:
+build/
+dist/
 
 # Eclipse files:
 .settings
