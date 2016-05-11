@@ -28,6 +28,9 @@
 
     # Compile like so:
     mvn package
+    
+    # Generate Javadocs
+    mvn javadoc:javadoc
 
     # Run like so:
     java -jar target\jdatalog-0.0.1-SNAPSHOT.jar [filename]
@@ -35,6 +38,8 @@
     
 
 ## License
+
+JDatalog is licensed under the [Apache license version 2](http://www.apache.org/licenses/LICENSE-2.0):
 
 	Copyright 2015-2016 Werner Stoop
 	
@@ -115,7 +120,7 @@ In a future I might consider `Expr.eq("X", "Y")`, `Expr.ne("X", "Y")`, `Expr.gt(
 
 There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to `expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular). The biggest obstacle at the moment is that the `Expr#evalBuiltIn()` throws a `DatalogException`, and `DatalogException is` necessarily checked because it is used for proper reporting of user errors.
 
-It seems the most practical solution is to wrap the DatalogException in a RuntimeException and then unwrap it at a higher level. See [this discussion on StackOverflow](http://stackoverflow.com/a/27648758/115589)
+It seems the most practical solution is to wrap the DatalogException in a RuntimeException and then unwrap it at a higher level. See [this answer on StackOverflow](http://stackoverflow.com/a/27648758/115589)
 
 ----
 
