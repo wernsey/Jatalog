@@ -134,6 +134,7 @@ public class JDatalog {
      * </p><p>
      * This is how to interpret the returned {@code Collection<Map<String, String>>}, assuming you store it in a variable
      * called {@code answers}: 
+	 * </p>
      * <ul>
 	 * <li> If {@code answers} is {@code null}, the statement didn't produce any results; i.e. it was a fact or a rule, not a query.
 	 * <li> If {@code answers} is empty, then it was a query that doesn't have any answers, so the output is "No."
@@ -141,7 +142,6 @@ public class JDatalog {
 	 *     answer, like {@code siblings(alice,bob)?} and the answer is "Yes."
 	 * <li> Otherwise {@code answers} is a list of all bindings that satisfy the query.
 	 * </ul>
-	 * </p>
      * @param reader The reader from which the statements are read.
      * @param output The object through which output should be written. Can be {@code null} in which case no output will be written.
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
