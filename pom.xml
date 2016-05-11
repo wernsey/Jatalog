@@ -40,7 +40,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>za.co.wstoop.jdatalog.JDatalog</mainClass>
+							<mainClass>za.co.wstoop.jdatalog.Shell</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

@@ -4,8 +4,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-/* Default implementation of QueryOutput */
+/**
+ * Default implementation of {@link QueryOutput} that uses {@code System.out}.
+ */
 public class StandardQueryOutput implements QueryOutput {
+
     @Override
     public void writeResult(List<Expr> goals, Collection<Map<String, String>> answers) {
         Profiler.Timer timer = Profiler.getTimer("output");
@@ -26,4 +29,5 @@ public class StandardQueryOutput implements QueryOutput {
             timer.stop();
         }
     }
+
 }

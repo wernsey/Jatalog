@@ -59,7 +59,7 @@ class Profiler {
 
     List<Long> getBucket(String name) {
         if(!buckets.containsKey(name)) {
-            List<Long> list = Collections.synchronizedList(new ArrayList<Long>(JDatalog.NUM_RUNS));
+            List<Long> list = Collections.synchronizedList(new ArrayList<Long>(Shell.NUM_RUNS));
             buckets.putIfAbsent(name, list);
         }
         return buckets.get(name);
