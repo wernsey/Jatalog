@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static za.co.wstoop.jdatalog.JDatalog.expr;
 
-// TODO: turn into a proper unit test... 
+// TODO: Code coverage could be better... 
 public class FluentTest {
 
 	@Test
@@ -36,9 +36,7 @@ public class FluentTest {
 
             // Run a query "who are siblings?"; print the answers
             answers = jDatalog.query(expr("sibling", "A", "B"));
-            System.out.println("Siblings:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + JDatalog.toString(answer)));
-
+            // Siblings are aaa-aab and aa-ab as well as the reverse
             assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
             assertTrue(TestUtils.answerContains(answers, "A", "ab", "B", "aa"));
@@ -46,31 +44,25 @@ public class FluentTest {
 
             // Run a query "who are aa's descendants?"; print the answers
             answers = jDatalog.query(expr("ancestor", "aa", "X"));
-            System.out.println("Descendants:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + JDatalog.toString(answer)));
             assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "X", "aab"));
             assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
 
             // This demonstrates how you would use a built-in predicate in the fluent API.
             answers = jDatalog.query(expr("parent", "aa", "A"), expr("parent", "aa", "B"), expr("!=", "A", "B"));            
-            System.out.println("Built-in predicates:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + JDatalog.toString(answer)));            
             assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
 
+            // Test deletion
             assertTrue(jDatalog.getEdb().contains(expr("parent", "aa", "aaa")));
             assertTrue(jDatalog.getEdb().contains(expr("parent", "aaa", "aaaa")));
-            System.out.println("Before Deletion: " + JDatalog.toString(jDatalog.getEdb()));
-            jDatalog.delete(expr("parent", "aa", "X"), expr("parent", "X", "aaaa")); // deletes parent(aa,aaa) and parent(aaa,aaaa)
-            System.out.println("After Deletion: " + JDatalog.toString(jDatalog.getEdb()));
+            // This query deletes parent(aa,aaa) and parent(aaa,aaaa)
+            jDatalog.delete(expr("parent", "aa", "X"), expr("parent", "X", "aaaa")); 
             assertFalse(jDatalog.getEdb().contains(expr("parent", "aa", "aaa")));
             assertFalse(jDatalog.getEdb().contains(expr("parent", "aaa", "aaaa")));
 
             // "who are aa's descendants now?"
             answers = jDatalog.query(expr("ancestor", "aa", "X"));
-            System.out.println("Descendants:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + JDatalog.toString(answer)));
 
         } catch (DatalogException e) {
             e.printStackTrace();
@@ -78,14 +70,17 @@ public class FluentTest {
 	}
 
 	@Test
-	public void teststatement() throws Exception {
+	public void testExecute() throws Exception {
 		// The JDatalog.execute(String) method runs queries directly.
 		try {
-			System.out.println("Test JDatalog.execute()");
+
 			JDatalog jDatalog = new JDatalog();
-			jDatalog.execute("foo(bar). foo(baz).");
+			
+			// Insert some facts
+			jDatalog.execute("foo(bar). foo(baz).");			
+			
+			// Run a query:
 			Collection<Map<String, String>> answers = jDatalog.execute("foo(What)?");
-			answers.stream().forEach(answer -> System.out.println(" -> " + JDatalog.toString(answer)));
 
 			assertTrue(TestUtils.answerContains(answers, "What", "baz", "What", "bar"));
 			assertFalse(TestUtils.answerContains(answers, "What", "fred"));
