@@ -4,6 +4,7 @@ target
 # Ant target directorries:
 build/
 dist/
+docs/
 
 # Eclipse files:
 .settings
