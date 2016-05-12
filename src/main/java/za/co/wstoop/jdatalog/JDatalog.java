@@ -29,6 +29,10 @@ public class JDatalog {
     // TODO: I don't like this. Remove.
     private static boolean debugEnable = false;
 
+    /**
+     * Default constructor.
+     * Creates a JDatalog instance with an empty IDB and EDB.
+     */
     public JDatalog() {
         this.edb = new ArrayList<>();
         this.idb = new ArrayList<>();
@@ -60,6 +64,12 @@ public class JDatalog {
         return ordered;
     }
 
+    /**
+     * Checks whether a term represents a variable.
+     * Variables start with uppercase characters. 
+     * @param term The term to test
+     * @return true if the term is a variable
+     */
     static boolean isVariable(String term) {
         return Character.isUpperCase(term.charAt(0));
     }
@@ -183,6 +193,13 @@ public class JDatalog {
         }
     }
 
+    /* Parses a Datalog statement.
+     * A statement can be:
+     * - a fact, like parent(alice, bob).
+     * - a rule, like ancestor(A, B) :- ancestor(A, C), parent(C, B).
+     * - a query, like ancestor(X, bob)?
+     * - a delete clause, like delete parent(alice, bob).
+     */
     private Collection<Map<String, String>> parseStmt(StreamTokenizer scan, List<Expr> goals) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("parseStmt");
         try {
@@ -276,6 +293,7 @@ public class JDatalog {
         return null;
     }
 
+    /* parses an expression */
     private static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("parseExpr");
         try {
@@ -346,6 +364,10 @@ public class JDatalog {
 
     private static final List<String> validOperators = Arrays.asList(new String[] {"=", "!=", "<>", "<", "<=", ">", ">="});
 
+    /* Parses one of the built-in predicates, eg X <> Y 
+     * It is represented internally as a Expr with the operator as the predicate and the 
+     * operands as its terms, eg. <>(X, Y) 
+     */
     private static Expr parseBuiltInPredicate(String lhs, StreamTokenizer scan) throws DatalogException {
         try {
             String operator;
@@ -386,6 +408,8 @@ public class JDatalog {
         }
     }
 
+    /* Converts a number to a string - The StreamTokenizer returns numbers as doubles by default
+     * so we need to convert them back to strings to store them in the expressions */
     private static String numberToString(double nval) {
         // Remove trailing zeros; http://stackoverflow.com/a/14126736/115589
         if(nval == (long) nval)
@@ -398,6 +422,7 @@ public class JDatalog {
     // There are several suggestions at http://stackoverflow.com/q/1102891/115589, but I chose to roll my own.
     private static final Pattern numberPattern = Pattern.compile("[+-]?\\d+(\\.\\d*)?([Ee][+-]?\\d+)?");
 
+    /* Checks, via regex, if a String can be parsed as a Double */
     static boolean tryParseDouble(String str) {
         return numberPattern.matcher(str).matches();
     }
@@ -453,7 +478,7 @@ public class JDatalog {
             }
 
             // Build the database. A Set ensures that the facts are unique
-            Collection<Expr> dataset = buildDatabase(new HashSet<>(edb), rules);
+            Collection<Expr> dataset = expandDatabaseBottomUp(new HashSet<>(edb), rules);
             if(debugEnable) {
                 System.out.println("query(): Database = " + toString(dataset));
             }
@@ -492,8 +517,8 @@ public class JDatalog {
         iterations of buildDatabase().
         For example if you have a rule p(X) :- q(X) then there will be a mapping from "q" to that rule
         so that when new facts q(Z) are deduced, the rule will be run in the next iteration to deduce p(Z) */
-    private Map<String, Collection<Rule>> buildDependantRules(Collection<Rule> rules) {
-        Profiler.Timer timer = Profiler.getTimer("buildDependantRules");
+    private Map<String, Collection<Rule>> buildDependentRules(Collection<Rule> rules) {
+        Profiler.Timer timer = Profiler.getTimer("buildDependentRules");
         try {
             Map<String, Collection<Rule>> map = new HashMap<>();
             for(Rule rule : rules) {
@@ -513,13 +538,17 @@ public class JDatalog {
         }
     }
 
-    /* TODO: write documentation for this */
-    private Collection<Rule> getDependantRules(Collection<Expr> facts, Map<String, Collection<Rule>> dependants) {
-        Profiler.Timer timer = Profiler.getTimer("getDependantRules");
+    /* Retrieves all the rules that are affected by a collection of facts.
+     * This is used as part of the semi-naive evaluation: When new facts are generated, we 
+     * take a look at which rules have those facts in their bodies and may cause new facts 
+     * to be derived during the next iteration. 
+     * The `dependents` parameter was built earlier in the buildDependentRules() method */
+    private Collection<Rule> getDependentRules(Collection<Expr> facts, Map<String, Collection<Rule>> dependents) {
+        Profiler.Timer timer = Profiler.getTimer("getDependentRules");
         try {
             Set<Rule> dependantRules = new HashSet<>();
             for(Expr fact : facts) {
-                Collection<Rule> rules = dependants.get(fact.predicate);
+                Collection<Rule> rules = dependents.get(fact.predicate);
                 if(rules != null) {
                     dependantRules.addAll(rules);
                 }
@@ -533,7 +562,7 @@ public class JDatalog {
     /* The core of the bottom-up implementation:
      * It computes the stratification of the rules in the EDB and then expands each
      * strata in turn, returning a collection of newly derived facts. */
-    private Collection<Expr> buildDatabase(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
+    private Collection<Expr> expandDatabaseBottomUp(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
         Profiler.Timer timer = Profiler.getTimer("buildDatabase");
         try {
             List< Collection<Rule> > strata = computeStratification(allRules);
@@ -635,7 +664,7 @@ public class JDatalog {
         try {
             Collection<Rule> rules = strataRules;
 
-            Map<String, Collection<Rule>> dependants = buildDependantRules(strataRules);
+            Map<String, Collection<Rule>> dependants = buildDependentRules(strataRules);
 
             while(true) {
                 Profiler.Timer loopTimer = Profiler.getTimer("loopTimer");
@@ -662,7 +691,7 @@ public class JDatalog {
                         System.out.println("expandStrata(): deltaFacts = " + toString(newFacts));
                     }
 
-                    rules = getDependantRules(newFacts, dependants);
+                    rules = getDependentRules(newFacts, dependants);
 
                     Profiler.Timer addAllTimer = Profiler.getTimer("addAll");
                     facts.addAll(newFacts);
