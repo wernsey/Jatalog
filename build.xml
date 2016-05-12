@@ -19,8 +19,11 @@
 
 	<target name="docs" >
 		<mkdir dir="${docs}"/>
-		<javadoc sourcepath="${src}" destdir="${docs}" noqualifier="all">
-		</javadoc>
+		<javadoc 
+			sourcepath="${src}" 
+			destdir="${docs}" 
+			windowtitle="JDatalog: Java Datalog Engine"
+			noqualifier="all"/>
 	</target>
 
 	<target name="dist" depends="compile">

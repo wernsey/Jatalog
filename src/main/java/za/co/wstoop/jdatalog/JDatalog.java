@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
  * 		<p>The methods {@link #fact(Expr)} and {@link #fact(String, String...)} are used to add facts to the database.</p>
  * <li> The rules, called the <i>Intensional Database</i> (IDB) which is stored as a Collection of {@link Rule} objects.
  * 		<p>The methods {@link #rule(Rule)} and {@link #rule(Expr, Expr...)} are used to add rules to the database.</p>
- * </p>
  * </ul>
  * <h3>The Parser</h3>
  * <p>
@@ -64,8 +63,8 @@ import java.util.stream.Collectors;
  * </p><p>
  * Stratification also puts additional constraints on the usage of negated expressions in JDatalog, which the engine checks for.
  * </p><p>
- * In addition JDatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
- * equals ">=", less than "<" and less or equals "<=".
+ * In addition JDatalog implements some built-in predicates: equals "=", not equals "&lt;&gt;", greater than "&gt;", greater or
+ * equals "&gt;=", less than "&lt;" and less or equals "&lt;=".
  * </p> 
  * <h3>The Fluent API</h3>
  * Several methods exist to make it easy to use JDatalog from a Java program without invoking the parser.
@@ -436,6 +435,7 @@ public class JDatalog {
      * Executes a query with the specified goals against the database.
      * @param goals The list of goals of the query.
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
      public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
@@ -799,6 +799,8 @@ public class JDatalog {
 
     /**
      * Validates all the rules and facts in the database.
+     * <p>TODO: Certain problems, such as comparison between unbound variables can only be detected 
+     * when the query is executed and won't cause a validation failure. <i>It should be possible to fix this</i></p>
      * @throws DatalogException If any rules or facts are invalid. The message contains the reason.
      */
     public void validate() throws DatalogException {
@@ -1002,19 +1004,13 @@ public class JDatalog {
 		return debugEnable;
 	}
 
+	/* Only used for unit testing */
 	List<Expr> getEdb() {
 		return edb;
 	}
 
-	void setEdb(List<Expr> edb) {
-		this.edb = edb;
-	}
-
+	/* Only used for unit testing */
 	Collection<Rule> getIdb() {
 		return idb;
-	}
-
-	void setIdb(Collection<Rule> idb) {
-		this.idb = idb;
 	}	
 }
