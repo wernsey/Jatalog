@@ -6,8 +6,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents a Datalog expression.
- * An expression is a predicate followed by zero or more terms, in the form {@code pred(term1, term2, term3...)}
+ * Represents a Datalog literal expression.
+ * <p>
+ * An expression is a predicate followed by zero or more terms, in the form {@code pred(term1, term2, term3...)}.
+ * </p><p>
+ * An expression is said to be <i>ground</i> if it contains no <i>variables</i> in its terms. Variables are indicated in
+ * terms starting with an upper-case letter, for example, the term A in {@code ancestor(A, bob)} is a variable while the term "bob" is
+ * not.
+ * </p><p>
+ * The number of terms is the expression's <i>arity</i>.
+ * </p>
  */
 public class Expr {
 

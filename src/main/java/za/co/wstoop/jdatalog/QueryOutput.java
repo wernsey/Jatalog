@@ -13,6 +13,8 @@ import java.util.Map;
  * Otherwise, if you set the QueryOutput parameter to {@code null}, {@link JDatalog#execute(Reader, QueryOutput)}
  * will just return the answers from the last query.
  * </p>
+ * @see JDatalog#toString(Collection)
+ * @see JDatalog#toString(Map)
  */
 public interface QueryOutput {
     /**

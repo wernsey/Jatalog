@@ -20,6 +20,57 @@ import java.util.stream.Collectors;
 
 /**
  * Main entry-point for the JDatalog engine.
+ * <p>
+ * It consists of several aspects: 
+ * </p><ul>
+ * <li> A database, storing the facts and rules.
+ * <li> A parser, for reading and executing statements in the Datalog language.
+ * <li> An evaluation engine, which executes Datalog queries.
+ * <li> A fluent API for accessing and querying the Datalog database programmatically from Java programs. 
+ * </ul>
+ * <h3>The Database</h3>
+ * <ul>
+ * <li> The facts, called the <i>Extensional Database</i> (EDB) which is stored as a Collection of <i>ground literal</i> {@link Expr} objects.
+ * 		<p>The methods {@link #fact(Expr)} and {@link #fact(String, String...)} are used to add facts to the database.</p>
+ * <li> The rules, called the <i>Intensional Database</i> (IDB) which is stored as a Collection of {@link Rule} objects.
+ * 		<p>The methods {@link #rule(Rule)} and {@link #rule(Expr, Expr...)} are used to add rules to the database.</p>
+ * </p>
+ * </ul>
+ * <h3>The Parser</h3>
+ * <p>
+ * {@link #execute(Reader, QueryOutput)} uses a {@link java.io.Reader} to read a series of Datalog statements from a file or a String
+ * and executes them.
+ * </p><p> 
+ * Statements can insert facts or rules in the database or execute queries against the database.
+ * </p><p>
+ * {@link #execute(String)} is a shorthand wrapper that can be used with the fluent API.
+ * </p>
+ * <h3>The Evaluation Engine</h3>
+ * JDatalog's evaluation engine is bottom-up, semi-naive with stratified negation.
+ * <p>
+ * <i>Bottom-up</i> means that the evaluator will start with all the known facts in the EDB and use the rules to derive new facts
+ * and repeat this process until no more new facts can be derived. It will then match all of the facts to the goal of the query
+ * to determine the answer
+ * (The alternative is <i>top-down</i> where the evaluator starts with a series of goals and use the rules and facts in the 
+ * database to prove the goal).
+ * </p><p>
+ * <i>Semi-naive</i> is an optimization wherein the evaluator will only consider a subset of the rules that may be affected 
+ * by facts derived during the previous iteration rather than all of the rules.
+ * </p><p>
+ * <i>Stratified negation</i> arranges the order in which rules are evaluated in such a way that negated goals "makes sense". Consider,
+ * for example, the rule {@code p(X) :- q(X), not r(X).}: All the {@code r(X)} facts must be derived first before the {@code p(X)}
+ * facts can be derived. If the rules are evaluated in the wrong order then the evaluator may derive a fact {@code p(a)} in one 
+ * iteration and then derive {@code r(a)} in a future iteration which will contradict each other.
+ * </p><p>
+ * Stratification also puts additional constraints on the usage of negated expressions in JDatalog, which the engine checks for.
+ * </p><p>
+ * In addition JDatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
+ * equals ">=", less than "<" and less or equals "<=".
+ * </p> 
+ * <h3>The Fluent API</h3>
+ * Several methods exist to make it easy to use JDatalog from a Java program without invoking the parser.
+ * <hr>
+ * <i>I tried to stick to [ceri]'s definitions, but what they call literals ended up being called <b>expressions</b> in JDatalog. See {@link Expr}</i>
  */
 public class JDatalog {
 
@@ -31,42 +82,18 @@ public class JDatalog {
 
     /**
      * Default constructor.
+     * <p>
      * Creates a JDatalog instance with an empty IDB and EDB.
+     * </p>
      */
     public JDatalog() {
         this.edb = new ArrayList<>();
         this.idb = new ArrayList<>();
     }
 
-    /* Reorganize the goals in a query so that negated literals are at the end.
-    A rule such as `a(X) :- not b(X), c(X)` won't work if the `not b(X)` is evaluated first, since X will not
-    be bound to anything yet, meaning there are an infinite number of values for X that satisfy `not b(X)`.
-    Reorganising the goals will solve the problem: every variable in the negative literals will have a binding
-    by the time they are evaluated if the rule is /safe/, which we assume they are - see Rule#validate()
-    Also, the built-in predicates (except `=`) should only be evaluated after their variables have been bound
-    for the same reason; see [ceri] for more information. */
-    static List<Expr> reorderQuery(List<Expr> query) {
-        List<Expr> ordered = new ArrayList<>(query.size());
-        for(Expr e : query) {
-            if(!e.isNegated() && !(e.isBuiltIn() && !e.predicate.equals("="))) {
-                ordered.add(e);
-            }
-        }
-        // Note that a rule like s(A, B) :- r(A, B), X = Y, q(Y), A > X. will cause an error relating to both sides
-        // of the '=' being unbound, and it can be fixed by moving the '=' operators to here, but I've decided against
-        // it, because the '=' should be evaluated ASAP, and it is difficult to determine programatically when that is.
-        // The onus is thus on the user to structure '=' operators properly.
-        for(Expr e : query) {
-            if(e.isNegated() || (e.isBuiltIn() && !e.predicate.equals("="))) {
-                ordered.add(e);
-            }
-        }
-        return ordered;
-    }
-
     /**
      * Checks whether a term represents a variable.
-     * Variables start with uppercase characters. 
+     * Variables start with upper-case characters. 
      * @param term The term to test
      * @return true if the term is a variable
      */
@@ -74,71 +101,8 @@ public class JDatalog {
         return Character.isUpperCase(term.charAt(0));
     }
 
-    // Methods for the fluent interface
-    
     /**
-     * Adds a new {@link Rule} to the IDB database.
-     * This is part of the fluent API.
-     * @param head The head of the rule
-     * @param body The expressions that make up the body of the rule.
-     * @return {@code this} so that methods can be chained.
-     * @throws DatalogException if the rule is invalid.
-     */
-    public JDatalog rule(Expr head, Expr... body) throws DatalogException {
-        Rule newRule = new Rule(head, body);
-        return rule(newRule);
-    }
-    
-    /**
-     * Adds a new rule to the IDB database.
-     * This is part of the fluent API.
-     * @param newRule the rule to add.
-     * @return {@code this} so that methods can be chained.
-     * @throws DatalogException if the rule is invalid.
-     */
-    public JDatalog rule(Rule newRule) throws DatalogException {
-        newRule.validate();
-        idb.add(newRule);
-        return this;
-    }
-
-    /**
-     * Adds a new fact to the EDB database.
-     * This is part of the fluent API.
-     * @param predicate The predicate of the fact. 
-     * @param terms the terms of the fact.
-     * @return {@code this} so that methods can be chained.
-     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
-     * 	cannot be {@link Expr#isNegated() negated}
-     */
-    public JDatalog fact(String predicate, String... terms) throws DatalogException {
-        return fact(new Expr(predicate, terms));
-    }
-    
-    /**
-     * Adds a new fact to the EDB database.
-     * This is part of the fluent API.
-     * @param newFact The fact to add.
-     * @return {@code this} so that methods can be chained.
-     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
-     * 	cannot be {@link Expr#isNegated() negated}
-     */
-    public JDatalog fact(Expr newFact) throws DatalogException {
-        if(!newFact.isGround()) {
-            throw new DatalogException("Facts must be ground: " + newFact);
-        }
-        if(newFact.isNegated()) {
-            throw new DatalogException("Facts cannot be negated: " + newFact);
-        }
-        // You can also match the arity of the fact against existing facts in the EDB,
-        // but it's more of a principle than a technical problem; see JDatalog#validate()
-        edb.add(newFact);
-        return this;
-    }
-
-  
-    /**
-     * Executes all the statements in a file/string or another object wrapped by a {@code java.io.Reader}.
+     * Executes all the statements in a file/string or another object wrapped by a {@link java.io.Reader}.
      * <p>
      * An optional {@link QueryOutput} object can be supplied as a parameter to output the results of multiple queries.
      * </p><p>
@@ -428,30 +392,44 @@ public class JDatalog {
     }
 
     /**
-     * Executes a Datalog statement
+     * Executes a Datalog statement.
      * @param statement the statement to execute as a string
-     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * @return The answer of the string, as a Collection of variable mappings.
      * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
-    public Collection<Map<String, String>> query(String statement) throws DatalogException {
+    public Collection<Map<String, String>> execute(String statement) throws DatalogException {
         // It would've been fun to wrap the results in a java.sql.ResultSet, but damn,
         // those are a lot of methods to implement:
         // https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html
         StringReader reader = new StringReader(statement);
         return execute(reader, null);
     }
-
-    /**
-     * Executes a query with the specified goals against the database.
-     * This is part of the fluent API.
-     * @param goals The goals of the query.
-     * @return The answer of the last statement in the file, as a Collection of variable mappings.
-     * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
-     * @throws DatalogException on syntax errors encountered while executing. 
-     */
-    public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
-        return query(Arrays.asList(goals));
+    
+    /* Reorganize the goals in a query so that negated literals are at the end.
+    A rule such as `a(X) :- not b(X), c(X)` won't work if the `not b(X)` is evaluated first, since X will not
+    be bound to anything yet, meaning there are an infinite number of values for X that satisfy `not b(X)`.
+    Reorganising the goals will solve the problem: every variable in the negative literals will have a binding
+    by the time they are evaluated if the rule is /safe/, which we assume they are - see Rule#validate()
+    Also, the built-in predicates (except `=`) should only be evaluated after their variables have been bound
+    for the same reason; see [ceri] for more information. */
+    static List<Expr> reorderQuery(List<Expr> query) {
+        List<Expr> ordered = new ArrayList<>(query.size());
+        for(Expr e : query) {
+            if(!e.isNegated() && !(e.isBuiltIn() && !e.predicate.equals("="))) {
+                ordered.add(e);
+            }
+        }
+        // Note that a rule like s(A, B) :- r(A, B), X = Y, q(Y), A > X. will cause an error relating to both sides
+        // of the '=' being unbound, and it can be fixed by moving the '=' operators to here, but I've decided against
+        // it, because the '=' should be evaluated ASAP, and it is difficult to determine programatically when that is.
+        // The onus is thus on the user to structure '=' operators properly.
+        for(Expr e : query) {
+            if(e.isNegated() || (e.isBuiltIn() && !e.predicate.equals("="))) {
+                ordered.add(e);
+            }
+        }
+        return ordered;
     }
 
     /**
@@ -470,7 +448,7 @@ public class JDatalog {
             List<Expr> orderedGoals = reorderQuery(goals);
 
             // getRelevantRules() strips a large part of the rules, so if I want to
-            // do some benchmarking of buildDatabase(), I use the IDB directly instead:
+            // do some benchmarking of expandDatabase(), I use the IDB directly instead:
             // Collection<Rule> rules = idb;
             Collection<Rule> rules = getRelevantRules(goals);
             if(debugEnable) {
@@ -478,15 +456,29 @@ public class JDatalog {
             }
 
             // Build the database. A Set ensures that the facts are unique
-            Collection<Expr> dataset = expandDatabaseBottomUp(new HashSet<>(edb), rules);
+            Collection<Expr> dataset = expandDatabase(new HashSet<>(edb), rules);
             if(debugEnable) {
                 System.out.println("query(): Database = " + toString(dataset));
             }
+            
+            // Now match the expanded database to the goals
             return matchGoals(orderedGoals, dataset, null);
         } finally {
             timer.stop();
         }
     }
+
+	 /**
+	  * Executes a query with the specified goals against the database.
+	  * This is part of the fluent API.
+	  * @param goals The goals of the query.
+	  * @return The answer of the last statement in the file, as a Collection of variable mappings.
+	  * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
+	  * @throws DatalogException on syntax errors encountered while executing. 
+	  */
+     public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
+         return query(Arrays.asList(goals));
+     }
 
     /* Returns a list of rules that are relevant to the query.
         If for example you're querying employment status, you don't care about family relationships, etc.
@@ -562,7 +554,7 @@ public class JDatalog {
     /* The core of the bottom-up implementation:
      * It computes the stratification of the rules in the EDB and then expands each
      * strata in turn, returning a collection of newly derived facts. */
-    private Collection<Expr> expandDatabaseBottomUp(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
+    private Collection<Expr> expandDatabase(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
         Profiler.Timer timer = Profiler.getTimer("buildDatabase");
         try {
             List< Collection<Rule> > strata = computeStratification(allRules);
@@ -806,39 +798,6 @@ public class JDatalog {
     }
 
     /**
-     * Deletes all the facts in the database that matches a specific query 
-     * @param goals The query to which to match the facts.
-     * @return true if any facts were deleted.
-     * @throws DatalogException on errors encountered during evaluation.
-     */
-    public boolean delete(Expr... goals) throws DatalogException {
-        return delete(Arrays.asList(goals));
-    }
-
-    /**
-     * Deletes all the facts in the database that matches a specific query 
-     * @param goals The query to which to match the facts.
-     * @return true if any facts were deleted.
-     * @throws DatalogException on errors encountered during evaluation.
-     */
-    public boolean delete(List<Expr> goals) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("delete");
-        try {
-            Collection<Map<String, String>> answers = query(goals);
-            List<Expr> facts = answers.stream()
-                // and substitute the answer on each goal
-                .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
-                .collect(Collectors.toList());
-            if(debugEnable) {
-                System.out.println("Facts to delete: " + toString(facts));
-            }
-            return edb.removeAll(facts);
-        } finally {
-            timer.stop();
-        }
-    }
-
-    /**
      * Validates all the rules and facts in the database.
      * @throws DatalogException If any rules or facts are invalid. The message contains the reason.
      */
@@ -888,13 +847,118 @@ public class JDatalog {
         }
     }
 
-    // TODO: I'm not happy with this. Remove later.
-    static void debug(String message) {
-        if(debugEnable) {
-            System.out.println(message);
+    // Methods for the fluent interface
+    
+    /**
+     * Helper method for creating a new expression.
+     * This method is part of the fluent API intended for {@code import static}
+     * @param predicate The predicate of the expression.
+     * @param terms The terms of the expression.
+     * @return the new expression
+     * @see Expr
+     */
+    public static Expr expr(String predicate, String... terms) {
+    	return new Expr(predicate, terms);
+    }
+    
+    /**
+     * Adds a new {@link Rule} to the IDB database.
+     * This is part of the fluent API.
+     * @param head The head of the rule
+     * @param body The expressions that make up the body of the rule.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the rule is invalid.
+     */
+    public JDatalog rule(Expr head, Expr... body) throws DatalogException {
+        Rule newRule = new Rule(head, body);
+        return rule(newRule);
+    }
+    
+    /**
+     * Adds a new rule to the IDB database.
+     * This is part of the fluent API.
+     * @param newRule the rule to add.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the rule is invalid.
+     */
+    public JDatalog rule(Rule newRule) throws DatalogException {
+        newRule.validate();
+        idb.add(newRule);
+        return this;
+    }
+
+    /**
+     * Adds a new fact to the EDB database.
+     * This is part of the fluent API.
+     * @param predicate The predicate of the fact. 
+     * @param terms the terms of the fact.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
+     * 	cannot be {@link Expr#isNegated() negated}
+     */
+    public JDatalog fact(String predicate, String... terms) throws DatalogException {
+        return fact(new Expr(predicate, terms));
+    }
+    
+    /**
+     * Adds a new fact to the EDB database.
+     * This is part of the fluent API.
+     * @param newFact The fact to add.
+     * @return {@code this} so that methods can be chained.
+     * @throws DatalogException if the fact is invalid. Facts must be {@link Expr#isGround() ground} and
+     * 	cannot be {@link Expr#isNegated() negated}
+     */
+    public JDatalog fact(Expr newFact) throws DatalogException {
+        if(!newFact.isGround()) {
+            throw new DatalogException("Facts must be ground: " + newFact);
+        }
+        if(newFact.isNegated()) {
+            throw new DatalogException("Facts cannot be negated: " + newFact);
+        }
+        // You can also match the arity of the fact against existing facts in the EDB,
+        // but it's more of a principle than a technical problem; see JDatalog#validate()
+        edb.add(newFact);
+        return this;
+    }
+
+    /**
+     * Deletes all the facts in the database that matches a specific query 
+     * @param goals The query to which to match the facts.
+     * @return true if any facts were deleted.
+     * @throws DatalogException on errors encountered during evaluation.
+     */
+    public boolean delete(Expr... goals) throws DatalogException {
+        return delete(Arrays.asList(goals));
+    }
+
+    /**
+     * Deletes all the facts in the database that matches a specific query 
+     * @param goals The query to which to match the facts.
+     * @return true if any facts were deleted.
+     * @throws DatalogException on errors encountered during evaluation.
+     */
+    public boolean delete(List<Expr> goals) throws DatalogException {
+        Profiler.Timer timer = Profiler.getTimer("delete");
+        try {
+            Collection<Map<String, String>> answers = query(goals);
+            List<Expr> facts = answers.stream()
+                // and substitute the answer on each goal
+                .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
+                .collect(Collectors.toList());
+            if(debugEnable) {
+                System.out.println("Facts to delete: " + toString(facts));
+            }
+            return edb.removeAll(facts);
+        } finally {
+            timer.stop();
         }
     }
 
+    /**
+     * Formats a collection of JDatalog entities, like {@link Expr}s and {@link Rule}s 
+     * @param collection the collection to convert to a string
+     * @return A String representation of the collection.
+     */
     public static String toString(Collection<?> collection) {
         StringBuilder sb = new StringBuilder("[");
         for(Object o : collection)
@@ -903,6 +967,11 @@ public class JDatalog {
         return sb.toString();
     }
 
+    /**
+     * Formats a Map of variable bindings to a String for output
+     * @param bindings the bindings to convert to a String
+     * @return A string representing the variable bindings
+     */
     public static String toString(Map<String, String> bindings) {
         StringBuilder sb = new StringBuilder("{");
         int s = bindings.size(), i = 0;
@@ -921,7 +990,31 @@ public class JDatalog {
         return sb.toString();
     }
 
-	public static boolean isDebugEnabled() {
+    // TODO: I'm not happy with this. Remove later.
+    static void debug(String message) {
+        if(debugEnable) {
+            System.out.println(message);
+        }
+    }
+    
+    // TODO: I'm not happy with this. Remove later.
+	static boolean isDebugEnabled() {
 		return debugEnable;
+	}
+
+	List<Expr> getEdb() {
+		return edb;
+	}
+
+	void setEdb(List<Expr> edb) {
+		this.edb = edb;
+	}
+
+	Collection<Rule> getIdb() {
+		return idb;
+	}
+
+	void setIdb(Collection<Rule> idb) {
+		this.idb = idb;
 	}	
 }
