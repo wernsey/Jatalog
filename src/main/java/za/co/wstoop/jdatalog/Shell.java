@@ -102,6 +102,8 @@ public class Shell {
                     if(line == null) {
                         break; // EOF
                     }
+                    
+                    // Intercept some special commands
                     line = line.trim();
                     if(line.equalsIgnoreCase("exit")) {
                         break;
@@ -114,7 +116,7 @@ public class Shell {
                         continue;
                     }
 
-                    Collection<Map<String, String>> answers = jDatalog.query(line);
+                    Collection<Map<String, String>> answers = jDatalog.execute(line);
 
                     // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
                     //      produce any results, like a fact or a rule, rather than a query.
@@ -141,63 +143,6 @@ public class Shell {
                 }
             }
         }
-
-        // TODO: Rather move this dead code to JUnit tests...
-        /* //This is how you would use the fluent API:
-        try {
-            JDatalog jDatalog = new JDatalog();
-
-            jDatalog.fact("parent", "a", "aa")
-                .fact("parent", "a", "ab")
-                .fact("parent", "aa", "aaa")
-                .fact("parent", "aa", "aab")
-                .fact("parent", "aaa", "aaaa")
-                .fact("parent", "c", "ca");
-
-            jDatalog.rule(new Expr("ancestor", "X", "Y"), new Expr("parent", "X", "Z"), new Expr("ancestor", "Z", "Y"))
-                .rule(new Expr("ancestor", "X", "Y"), new Expr("parent", "X", "Y"))
-                .rule(new Expr("sibling", "X", "Y"), new Expr("parent", "Z", "X"), new Expr("parent", "Z", "Y"), new Expr("!=", "X", "Y"))
-                .rule(new Expr("related", "X", "Y"), new Expr("ancestor", "Z", "X"), new Expr("ancestor", "Z", "Y"));
-
-            Collection<Map<String, String>> answers;
-
-            // Run a query "who are siblings?"; print the answers
-            answers = jDatalog.query(new Expr("sibling", "A", "B"));
-            System.out.println("Siblings:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + toString(answer)));
-
-            // Run a query "who are aa's descendants?"; print the answers
-            answers = jDatalog.query(new Expr("ancestor", "aa", "X"));
-            System.out.println("Descendants:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + toString(answer)));
-
-            // This demonstrates how you would use a built-in predicate in the fluent API.
-            System.out.println("Built-in predicates:");
-            answers = jDatalog.query(new Expr("parent", "aa", "A"), new Expr("parent", "aa", "B"), new Expr("!=", "A", "B"));
-            answers.stream().forEach(answer -> System.out.println(" -> " + toString(answer)));
-
-            System.out.println("Before Deletion: " + toString(jDatalog.edb));
-            jDatalog.delete(new Expr("parent", "aa", "X"), new Expr("parent", "X", "aaaa")); // deletes parent(aa,aaa) and parent(aaa,aaaa)
-            System.out.println("After Deletion: " + toString(jDatalog.edb));
-
-            // "who are aa's descendants now?"
-            answers = jDatalog.query(new Expr("ancestor", "aa", "X"));
-            System.out.println("Descendants:");
-            answers.stream().forEach(answer -> System.out.println(" -> " + toString(answer)));
-
-        } catch (DatalogException e) {
-            e.printStackTrace();
-        } */
-
-        /* // The JDatalog.query(String) method runs queries directly.
-        try{
-            JDatalog jDatalog = new JDatalog();
-            jDatalog.query("foo(bar). foo(baz).");
-            Collection<Map<String, String>> answers = jDatalog.query("foo(What)?");
-            answers.stream().forEach(answer -> System.out.println(" -> " + toString(answer)));
-        } catch (DatalogException e) {
-            e.printStackTrace();
-        } */
 
     }
 }
