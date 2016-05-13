@@ -1,9 +1,0 @@
-% Facts:
-stud(a).
-stud(b).
-stud(c).
-grad(a).
-
-% Rules:
-und(X) :- stud(X), not grad(X).
-und(X)?

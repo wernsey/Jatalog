@@ -1,3 +1,4 @@
+% Based on [mixu]'s test
 edge(a, b).
 edge(a, c).
 edge(b, d).
