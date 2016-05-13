@@ -194,6 +194,8 @@ public class Expr {
             }
         } else {
             try {
+            	
+            	// These errors can be detected in the validate method:
                 if(JDatalog.isVariable(term1))
                     throw new DatalogException("Unbound variable " + term1 + " in evaluation of " + this);
                 if(JDatalog.isVariable(term2))
@@ -201,7 +203,7 @@ public class Expr {
 
                 if(predicate.equals("<>")) {
                     // '<>' is also a bit special
-                    if(JDatalog.tryParseDouble(term1) && JDatalog.tryParseDouble(term2)) {
+                    if(DatalogParser.tryParseDouble(term1) && DatalogParser.tryParseDouble(term2)) {
                             double d1 = Double.parseDouble(term1);
                             double d2 = Double.parseDouble(term2);
                             return d1 != d2;
@@ -210,7 +212,7 @@ public class Expr {
                     }
                 } else {
                     // ordinary comparison operator
-                    if(!JDatalog.tryParseDouble(term1) || !JDatalog.tryParseDouble(term2)) {
+                    if(!DatalogParser.tryParseDouble(term1) || !DatalogParser.tryParseDouble(term2)) {
                         throw new DatalogException("Both parameters of " + predicate + " must be numeric (" + term1 + ", " + term2 + ") in evaluation of " + this);
                     }
                     double d1 = Double.parseDouble(term1);

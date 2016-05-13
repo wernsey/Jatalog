@@ -52,7 +52,7 @@ public class Shell {
                     System.gc();System.runFinalization();
                     System.out.println();
 
-                    QueryOutput qo = new StandardQueryOutput();
+                    QueryOutput qo = new DefaultQueryOutput();
                     for (int run = 0; run < NUM_RUNS; run++) {
 
                         JDatalog jDatalog = new JDatalog();
@@ -76,7 +76,7 @@ public class Shell {
                     });
                 } else {
                     JDatalog jDatalog = new JDatalog();
-                    QueryOutput qo = new StandardQueryOutput();
+                    QueryOutput qo = new DefaultQueryOutput();
                     for (String arg : args) {
                         if (JDatalog.isDebugEnabled()) {
                             System.out.println("Executing file " + arg);

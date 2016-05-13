@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Default implementation of {@link QueryOutput} that uses {@code System.out}.
  */
-public class StandardQueryOutput implements QueryOutput {
+public class DefaultQueryOutput implements QueryOutput {
 
     @Override
     public void writeResult(List<Expr> goals, Collection<Map<String, String>> answers) {
