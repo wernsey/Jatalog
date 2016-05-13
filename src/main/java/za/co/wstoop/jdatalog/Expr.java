@@ -95,18 +95,6 @@ public class Expr {
     }
 
     /**
-     * Static method for constructing negated expressions in the fluent API
-     * @param predicate The predicate of the expression
-     * @param terms The terms of the expression
-     * @return The negated expression
-     */
-    public static Expr not(String predicate, String... terms) {
-        Expr e = new Expr(predicate, terms);
-        e.negated = true;
-        return e;
-    }
-
-    /**
      * Unifies {@code this} expression with another expression.
      * @param that The expression to unify with
      * @param bindings The bindings of variables to values after unification
@@ -291,6 +279,9 @@ public class Expr {
         return sb.toString();
     }
 
+    /* Converts a term to a string. If it started as a quoted string it is now enclosed in quotes,
+     * and other quotes escaped.
+     * caveat: You're going to have trouble if you have other special characters in your strings */
     private static StringBuilder termToString(StringBuilder sb, String term) {
         if(term.startsWith("\""))
             sb.append('"').append(term.substring(1).replaceAll("\"", "\\\\\"")).append('"');
@@ -299,4 +290,76 @@ public class Expr {
         return sb;
     }
 
+    /**
+     * Static method for constructing negated expressions in the fluent API.
+     * Negated expressions are of the form {@code not predicate(term1, term2,...)}.
+     * @param predicate The predicate of the expression
+     * @param terms The terms of the expression
+     * @return The negated expression
+     */
+    public static Expr not(String predicate, String... terms) {
+        Expr e = new Expr(predicate, terms);
+        e.negated = true;
+        return e;
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a = b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr eq(String a, String b) {
+        return new Expr("=", a, b);
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a <> b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr ne(String a, String b) {
+        return new Expr("<>", a, b);
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a < b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr lt(String a, String b) {
+        return new Expr("<", a, b);
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a <= b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr le(String a, String b) {
+        return new Expr("<=", a, b);
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a > b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr gt(String a, String b) {
+        return new Expr(">", a, b);
+    }
+    
+    /**
+     * Static helper method for constructing an expression {@code a >= b} in the fluent API.
+     * @param a the left hand side of the operator
+     * @param b the right hand side of the operator
+     * @return the expression
+     */
+    public static Expr ge(String a, String b) {
+        return new Expr(">=", a, b);
+    }
 }

@@ -106,8 +106,7 @@ JDatalog is licensed under the [Apache license version 2](http://www.apache.org/
 It occurred to me that if you *really* want the equivalent of JDBC *prepared statements* then you can pass pass in a `Map<String, String>` containing
 the bound variables. This map will then be sent all the way down to `matchRule()` where it can be passed as the `bindings` parameter in the call
 to `matchGoals()` - so the map will end up at the bottom of the StackMap stack.
-This will allow you to use statements like for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, with `binding = {X : "bar"}`, in the
-fluent API to perform bulk inserts or queries and so on.
+This will allow you to use statements like for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, with `binding = {X : "bar"}`, in the fluent API to perform bulk inserts or queries and so on.
 
 A problem is that the varargs ... operator must come last in the method declaration, but I can work around this by having a method that only accepts 
 `List<Expr>` as an argument rather than varargs.
@@ -115,12 +114,6 @@ A problem is that the varargs ... operator must come last in the method declarat
 You can then create a method `prepareStatement()` that can return a `List<Expr>` from a parsed query.
 
 Actually, the `List<Expr>` should be wrapped in a `JStatement` (or something) interface so that you can run insert rules, insert facts and delete facts through these *prepared statements*.
-
-----
-
-I've decided that the built-in predicates are to be written as `new Expr("!=", "X", "Y")` for `X != Y` in the fluent API. I've considered special static methods and Builder objects, but none really appealed to me.
-
-In a future I might consider `Expr.eq("X", "Y")`, `Expr.ne("X", "Y")`, `Expr.gt("X", "Y")`, `Expr.lt("X", "Y")`, `Expr.ge("X", "Y")` and `Expr.le("X", "Y")`.
 
 ----
 
@@ -134,9 +127,9 @@ The Racket language has a Datalog module as part of its library [rack]. I've loo
 
 ----
 
-It is conceptually possible to make the `List<String> terms` of Expr a `List<Object>` instead, so that you can store complex Java objects in the database (as POJOs). 
+It is conceptually possible to make the `List<String> terms` of `Expr` a `List<Object>` instead, so that you can store complex Java objects in the database (as POJOs). 
 
-The `isVariable()` method will just have to be modified to check whether its parameter is instanceof String and starts with an uppercase character, the bindings will become a `Map<String, Object>`, the result of `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
+The `isVariable()` method will just have to be modified to check whether its parameter is `instanceof` String and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
 
 It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. I don't intend to implement it at the moment, though.
 
@@ -153,21 +146,24 @@ There are several opportunities to optimize the EDB.
 
 You can trim facts before you start with `expandDatabase()` so that you only evaluate facts that are relevant to your goals.
 So, for example, if your goal is related to "cousins" then you can filter out facts related to "employment".
-Actually, you can filter out the facts in the same way that you filter the rules in `getRelevantRules()`
+Actually, you can filter out the facts in the same way that you filter the rules in `getRelevantRules()`.
 
 When you're building the database, you can store all the Facts in a `FactProvider` object that wraps a `Map<String, List<Expr>>` 
 so that the `Expr`s are stored in a structure indexed by the predicate. This way you only need to ever examine facts that have the same 
-predicate as the current goal
+predicate as the current goal.
 
-* You have to construct this object before evaluation starts in the `query(List<Expr> goals)` method.
-* matchGoals() will use this object to iterate through only tjhe relevant facts, rather than all of them.
-* The line `facts.addAll(newFacts);` in `expandStrata()` has to be changed to reorganise the facts inside this FactProvider 
+* You have to construct this object before evaluation starts in the `query(List<Expr> goals)` method from the facts
+    in the database. You may be able to optimize this if you filter the facts as with `getRelevantRules()`. (A)
+* `matchGoals()` will use this object to iterate through only the relevant facts, rather than all of them.
+* The line `facts.addAll(newFacts);` in `expandStrata()` has to be changed to reorganize the facts inside this FactProvider 
 
 ----
 
 The EDB can also be hidden behind an EdbProvider interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
 users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For example, an EDB that is 
 backed by a database can do a `SELECT * from predicate` when necessary. 
+
+You need to retrieve all relevant facts in the `query(List<Expr> goals)`. See (A) of my previous section.
 
 Such an EdbProvider interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
 `JDatalog#execute()` and `JDatalog#fact()` methods.

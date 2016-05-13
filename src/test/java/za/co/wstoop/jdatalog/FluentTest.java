@@ -29,9 +29,11 @@ public class FluentTest {
 
 			jDatalog.rule(expr("ancestor", "X", "Y"), expr("parent", "X", "Z"), expr("ancestor", "Z", "Y"))
 					.rule(expr("ancestor", "X", "Y"), expr("parent", "X", "Y"))
-					.rule(expr("sibling", "X", "Y"), expr("parent", "Z", "X"), expr("parent", "Z", "Y"), expr("!=", "X", "Y"))
+					.rule(expr("sibling", "X", "Y"), expr("parent", "Z", "X"), expr("parent", "Z", "Y"), Expr.ne("X", "Y"))
 					.rule(expr("related", "X", "Y"), expr("ancestor", "Z", "X"), expr("ancestor", "Z", "Y"));
 
+			jDatalog.validate();
+			
             Collection<Map<String, String>> answers;
 
             // Run a query "who are siblings?"; print the answers
@@ -49,7 +51,7 @@ public class FluentTest {
             assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
 
             // This demonstrates how you would use a built-in predicate in the fluent API.
-            answers = jDatalog.query(expr("parent", "aa", "A"), expr("parent", "aa", "B"), expr("!=", "A", "B"));            
+            answers = jDatalog.query(expr("parent", "aa", "A"), expr("parent", "aa", "B"), Expr.ne("A", "B"));            
             assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
 
