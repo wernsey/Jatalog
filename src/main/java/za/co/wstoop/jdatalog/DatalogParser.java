@@ -10,15 +10,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Encapsulates the parser for the Datalog language.
+ * Internal class that encapsulates the parser for the Datalog language.
  */
 class DatalogParser {
-	
-	JDatalog jDatalog;
-	
-	DatalogParser(JDatalog jDatalog) {
-		this.jDatalog = jDatalog;
-	}
 	
 	
 	/* Parses a Datalog statement.
@@ -28,7 +22,7 @@ class DatalogParser {
      * - a query, like ancestor(X, bob)?
      * - a delete clause, like delete parent(alice, bob).
      */
-    Collection<Map<String, String>> parseStmt(StreamTokenizer scan, List<Expr> goals) throws DatalogException {
+    static Collection<Map<String, String>> parseStmt(JDatalog jDatalog, StreamTokenizer scan, List<Expr> goals) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("parseStmt");
         try {
 

@@ -138,12 +138,10 @@ public class JDatalog {
 
             // Tracks the last query's goals (for output purposes)
             List<Expr> goals = new ArrayList<>();
-
-            DatalogParser parser = new DatalogParser(this);
             
             while(scan.ttype != StreamTokenizer.TT_EOF) {
                 scan.pushBack();
-                answers = parser.parseStmt(scan, goals);
+                answers = DatalogParser.parseStmt(this, scan, goals);
                 if(answers != null && output != null) {
                     output.writeResult(goals, answers);
                 }
