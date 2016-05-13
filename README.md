@@ -11,19 +11,6 @@
     This is why the `toString(Map<String, String> bindings)` method uses `substring(1)` on the term.
 * Also, predicates can't be in quotes. Is this a desirable feature?
 
-## Changes
-
-* 2016/04/26 - It now supports built-in predicates "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=".
-* 2016/04/19 - It now implements stratified negation, or Stratified Datalog~.
-* 2016/04/12 - It now implements simple negation for non-recursive programs, or semipositive Datalog~ (my keyboard doesn't have their "not" sign) as described in section 2.3.1 of [gree]. It won't be able to compute very complex negations correctly.
-* 2016/04/11 - Work-In-Progress: I'm busy implementing negation.
-* 2016/04/08 - I've replaced the code that uses the Streams API with more old-fashioned code. The Streams version worked properly, but my rough benchmarks show that the code is ever so slightly more efficient now.
-* 2016/04/06 - It now implements *"Semi-Naive Bottom-Up"* evaluation.
-* 2016/03/29 - Added a profiler
-* 2016/03/24 - Implemented a parser - the original version only had the fluent API.
-* 2016/03/23 - The original version was *"Naive Bottom-Up"*
-
-
 ## Usage
 
 ### With Maven
