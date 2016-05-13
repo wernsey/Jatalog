@@ -190,7 +190,13 @@ public class Expr {
                 bindings.put(term2, term1);
                 return true;
             } else {
-                return term1.equals(term2);
+				if (DatalogParser.tryParseDouble(term1) && DatalogParser.tryParseDouble(term2)) {
+					double d1 = Double.parseDouble(term1);
+					double d2 = Double.parseDouble(term2);
+					return d1 == d2;
+				} else {
+					return term1.equals(term2);
+				}
             }
         } else {
             try {
