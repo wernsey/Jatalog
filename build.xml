@@ -1,13 +1,16 @@
 <project name="jdatalog" default="dist" basedir=".">
 	<description>Java Datalog Engine with Stratified Negation</description>
 
-	<property name="version" value="0.0.1"/>
+	<!-- Maven is main build tool for this project, but the Ant build file is provided
+	   for convenience. As such, it is not concerned with unit testing and code coverage -->
+	    
+	<property name="version" value="0.9"/>
 	<property name="src" location="src/main/java"/>
 	<property name="test" location="src/test/java"/>
 	<property name="build" location="build"/>
 	<property name="dist" location="dist"/>
 	<property name="docs" location="docs"/>
-
+	
 	<target name="init">
 		<tstamp/>
 		<mkdir dir="${build}"/>

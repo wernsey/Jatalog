@@ -101,19 +101,9 @@ JDatalog is licensed under the [Apache license version 2](http://www.apache.org/
 
 ## Ideas and Notes
 
-[davi] explains how using top-down evaluation might lead to infinite loops, but says that it is sufficient to prevent this by failing
-the test if you encounter a goal that you've already encountered in the stack. A very early version of this module basically ported [mixu]'s
-top-down evaluator to Java, but encountered this precise problem (and solved it in the way described).
+*Just some thoughts on how the system is currently implemented and how it can be improved in the future*
 
-----
-
-I initially just assumed that using the StackMap would be faster, so I tried an implementation with a HashMap where I just did a
-`newMap.putAll(parent)` and removed the StackMap entirely. My rough benchmarks showed the StackMap-based implementation to be about 30%
-faster than the alternative.
-
-----
-
-It occurred to me that if you /really/ want the equivalent of JDBC *prepared statements* then you can pass pass in a Map<String, String> containing
+It occurred to me that if you *really* want the equivalent of JDBC *prepared statements* then you can pass pass in a `Map<String, String>` containing
 the bound variables. This map will then be sent all the way down to `matchRule()` where it can be passed as the `bindings` parameter in the call
 to `matchGoals()` - so the map will end up at the bottom of the StackMap stack.
 This will allow you to use statements like for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, with `binding = {X : "bar"}`, in the
@@ -157,4 +147,35 @@ I've decided against arithmetic built-in predicates, such as plus(X,Y,Z) => X + 
 * Arithmetic predicates aren't that simple. They should be evaluated as soon as the input variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
 * Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of `Expr` was a `List<Object>` - see my note above.
 
-    
+----
+
+There are several opportunities to optimize the EDB.
+
+You can trim facts before you start with `expandDatabase()` so that you only evaluate facts that are relevant to your goals.
+So, for example, if your goal is related to "cousins" then you can filter out facts related to "employment".
+Actually, you can filter out the facts in the same way that you filter the rules in `getRelevantRules()`
+
+When you're building the database, you can store all the Facts in a `FactProvider` object that wraps a `Map<String, List<Expr>>` 
+so that the `Expr`s are stored in a structure indexed by the predicate. This way you only need to ever examine facts that have the same 
+predicate as the current goal
+
+* You have to construct this object before evaluation starts in the `query(List<Expr> goals)` method.
+* matchGoals() will use this object to iterate through only tjhe relevant facts, rather than all of them.
+* The line `facts.addAll(newFacts);` in `expandStrata()` has to be changed to reorganise the facts inside this FactProvider 
+
+----
+
+The EDB can also be hidden behind an EdbProvider interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
+users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For example, an EDB that is 
+backed by a database can do a `SELECT * from predicate` when necessary. 
+
+Such an EdbProvider interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
+`JDatalog#execute()` and `JDatalog#fact()` methods.
+
+Perhaps the EdbProvider interface should implement the Iterator interface as well?
+
+----
+
+I also have the feeling that `getRelevantRules()` can somehow be replaced by `buildDependentRules()` for some simplification, but I'm
+not sure how.
+

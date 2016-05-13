@@ -26,7 +26,10 @@ import java.util.Set;
  * The {@link #remove()} method also flattens {@code this} to avoid modifying the parent while and the {@link #clear()} method just sets parent to null
  * and clears {@code self}.
  * </p><p>
- * I've tried a version that extends {@code AbstractMap}, but it proved to be significantly slower.
+ * I initially just assumed that using the StackMap would be faster, so I tried an implementation with a {@link HashMap} where I just did a
+ * {@code newMap.putAll(parent)} and removed the StackMap entirely. My rough benchmarks showed the StackMap-based implementation to be about 30%
+ * faster than the alternative.
+ * I've also tried a version that extends {@link AbstractMap}, but it proved to be significantly slower.
  * </p>
  */
 class StackMap<K,V> implements Map<K,V> {
