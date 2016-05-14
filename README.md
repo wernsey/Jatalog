@@ -15,7 +15,7 @@
 
 ### With Maven
 
-The prefered method of building JDatalog is through [Maven](https://maven.apache.org/).
+The preferred method of building JDatalog is through [Maven](https://maven.apache.org/).
 
     # Compile like so:
     mvn package
@@ -106,7 +106,8 @@ Actually, the `List<Expr>` should be wrapped in a `JStatement` (or something) in
 
 There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to `expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular). The biggest obstacle at the moment is that the `Expr#evalBuiltIn()` throws a `DatalogException`, and `DatalogException is` necessarily checked because it is used for proper reporting of user errors.
 
-It seems the most practical solution is to wrap the DatalogException in a RuntimeException and then unwrap it at a higher level. See [this answer on StackOverflow](http://stackoverflow.com/a/27648758/115589)
+It seems the most practical solution is to wrap the DatalogException in a `RuntimeException` and then unwrap it at a higher level. 
+See [this answer on StackOverflow](http://stackoverflow.com/a/27648758/115589)
 
 ----
 
@@ -122,7 +123,7 @@ It won't be that useful a feature if you just use the parser, but it could be a 
 
 ----
 
-I've decided against arithmetic built-in predicates, such as plus(X,Y,Z) => X + Y = Z, for now:
+I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X + Y = Z`, for now:
 
 * Arithmetic predicates aren't that simple. They should be evaluated as soon as the input variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
 * Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of `Expr` was a `List<Object>` - see my note above.
@@ -135,25 +136,16 @@ You can trim facts before you start with `expandDatabase()` so that you only eva
 So, for example, if your goal is related to "cousins" then you can filter out facts related to "employment".
 Actually, you can filter out the facts in the same way that you filter the rules in `getRelevantRules()`.
 
-When you're building the database, you can store all the Facts in a `FactProvider` object that wraps a `Map<String, List<Expr>>` 
-so that the `Expr`s are stored in a structure indexed by the predicate. This way you only need to ever examine facts that have the same 
-predicate as the current goal.
-
-* You have to construct this object before evaluation starts in the `query(List<Expr> goals)` method from the facts
-    in the database. You may be able to optimize this if you filter the facts as with `getRelevantRules()`. (A)
-* `matchGoals()` will use this object to iterate through only the relevant facts, rather than all of them.
-* The line `facts.addAll(newFacts);` in `expandStrata()` has to be changed to reorganize the facts inside this FactProvider 
-
-----
-
-The EDB can also be hidden behind an EdbProvider interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
+The EDB can also be hidden behind an `EdbProvider` interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
 users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For example, an EDB that is 
 backed by a database can do a `SELECT * from predicate` when necessary. 
 
-You need to retrieve all relevant facts in the `query(List<Expr> goals)`. See (A) of my previous section.
+You need to retrieve all relevant facts in the `query(List<Expr> goals)`.
 
-Such an EdbProvider interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
+Such an `EdbProvider` interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
 `JDatalog#execute()` and `JDatalog#fact()` methods.
+
+The `JDatalog#validate()` method will need to be modified as well - maybe it is not such a good idea...
 
 Perhaps the EdbProvider interface should implement the Iterator interface as well?
 

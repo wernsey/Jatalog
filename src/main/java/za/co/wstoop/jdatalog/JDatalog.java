@@ -221,9 +221,11 @@ public class JDatalog {
             if(debugEnable) {
                 System.out.println("To answer query, we need to evaluate: " + toString(rules));
             }
+            
+            IndexedSet<Expr,String> facts = new IndexedSet<>(edb);
 
             // Build the database. A Set ensures that the facts are unique
-            Collection<Expr> dataset = expandDatabase(new HashSet<>(edb), rules);
+            IndexedSet<Expr,String> dataset = expandDatabase(facts, rules);
             if(debugEnable) {
                 System.out.println("query(): Database = " + toString(dataset));
             }
@@ -321,7 +323,7 @@ public class JDatalog {
     /* The core of the bottom-up implementation:
      * It computes the stratification of the rules in the EDB and then expands each
      * strata in turn, returning a collection of newly derived facts. */
-    private Collection<Expr> expandDatabase(Set<Expr> facts, Collection<Rule> allRules) throws DatalogException  {
+    private IndexedSet<Expr,String> expandDatabase(IndexedSet<Expr,String> facts, Collection<Rule> allRules) throws DatalogException  {
         Profiler.Timer timer = Profiler.getTimer("buildDatabase");
         try {
             List< Collection<Rule> > strata = computeStratification(allRules);
@@ -418,7 +420,7 @@ public class JDatalog {
      * The semi-naive part is to only use the rules that are affected by newly derived
      * facts in each iteration of the loop.
      */
-    private Collection<Expr> expandStrata(Set<Expr> facts, Collection<Rule> strataRules) throws DatalogException {
+    private Collection<Expr> expandStrata(IndexedSet<Expr,String> facts, Collection<Rule> strataRules) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("expandStrata");
         try {
             Collection<Rule> rules = strataRules;
@@ -466,7 +468,7 @@ public class JDatalog {
     }
 
     /* Match the facts in the EDB against a specific rule */
-    private Set<Expr> matchRule(final Collection<Expr> facts, Rule rule) throws DatalogException {
+    private Set<Expr> matchRule(IndexedSet<Expr,String> facts, Rule rule) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("matchRule");
         try {
             if(rule.body.isEmpty()) // If this happens, you're using the API wrong.
@@ -488,7 +490,7 @@ public class JDatalog {
 
     /* Match the goals in a rule to the facts in the database (recursively). 
      * If the goal is a built-in predicate, it is also evaluated here. */
-    private Collection<Map<String, String>> matchGoals(List<Expr> goals, final Collection<Expr> facts, Map<String, String> bindings) throws DatalogException {
+    private Collection<Map<String, String>> matchGoals(List<Expr> goals, IndexedSet<Expr,String> facts, Map<String, String> bindings) throws DatalogException {
 
         Expr goal = goals.get(0); // First goal; Assumes goals won't be empty
 
@@ -515,10 +517,7 @@ public class JDatalog {
             // Positive rule: Match each fact to the first goal.
             // If the fact matches: If it is the last/only goal then we can return the bindings
             // as an answer, otherwise we recursively check the remaining goals.
-            for(Expr fact : facts) {
-                if(!fact.predicate.equals(goal.predicate)) {
-                    continue;
-                }
+            for(Expr fact : facts.getIndexed(goal.predicate)) {
                 Map<String, String> newBindings = new StackMap<String, String>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     if(lastGoal) {
@@ -542,10 +541,7 @@ public class JDatalog {
             if(bindings != null) {
                 goal = goal.substitute(bindings);
             }
-            for(Expr fact : facts) {
-                if(!fact.predicate.equals(goal.predicate)) {
-                    continue;
-                }
+            for(Expr fact : facts.getIndexed(goal.predicate)) {
                 Map<String, String> newBindings = new StackMap<String, String>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     return Collections.emptyList();

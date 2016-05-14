@@ -17,7 +17,7 @@ import java.util.Map;
  * The number of terms is the expression's <i>arity</i>.
  * </p>
  */
-public class Expr {
+public class Expr implements Indexable<String> {
 
     String predicate;
     List<String> terms;
@@ -362,4 +362,9 @@ public class Expr {
     public static Expr ge(String a, String b) {
         return new Expr(">=", a, b);
     }
+
+	@Override
+	public String index() {		
+		return predicate;
+	}
 }
