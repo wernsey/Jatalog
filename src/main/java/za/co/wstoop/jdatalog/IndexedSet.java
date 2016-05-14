@@ -99,6 +99,7 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 
 	@Override
 	public boolean remove(Object o) {
+		// FIXME: I don't have StackOverflow at the moment to answer this question
 		if(o instanceof Indexable<?>) {
 			Indexable<I> e = (Indexable<I>)o;
 			Collection<E> es = getIndexed(e.index());
@@ -121,7 +122,7 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
+		// TODO What is this method supposed to do again?
 		return false;
 	}
 

@@ -23,7 +23,7 @@ public class Shell {
     // TODO: The benchmarking is obsolete. Remove it.
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
-    static final int NUM_RUNS = 1000;
+    static final int NUM_RUNS = 10000;
 
     /**
      * Main method.
@@ -72,7 +72,7 @@ public class Shell {
                         double time = Profiler.average(key);
                         double total = Profiler.total(key);
                         int count = Profiler.count(key);
-                        System.out.println(String.format("%-20s time: %10.4fms; total: %12.2fms; count: %d", key, time, total, count));
+                        System.out.println(String.format("%-21s time: %10.4fms; total: %10.2fms; count: %d", key, time, total, count));
                     });
                 } else {
                     JDatalog jDatalog = new JDatalog();
