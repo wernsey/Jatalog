@@ -1,10 +1,9 @@
 package za.co.wstoop.jdatalog;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Class that represents a Datalog rule.
@@ -51,21 +50,6 @@ public class Rule {
 	 */
 	public void validate() throws DatalogException {
 
-		Set<String> headVars = head.terms.stream()
-			.filter(term -> JDatalog.isVariable(term))
-			.collect(Collectors.toSet());
-
-		Set<String> bodyVars = body.stream()
-			.flatMap(expr -> expr.terms.stream())
-			.filter(term -> JDatalog.isVariable(term))
-			.collect(Collectors.toSet());
-
-		// Enforce the rule that variables in the head must appear in the body
-		headVars.removeAll(bodyVars);
-		if(!headVars.isEmpty()) {
-			throw new DatalogException("These variables from the head of rule " + toString() + " must appear in the body: " + JDatalog.toString(headVars));
-		}
-
 		// Check for /safety/: each variable in the body of a rule should appear at least once in a positive expression,
 		// to prevent infinite results. E.g. p(X) :- not q(X, Y) is unsafe because there are an infinite number of values
 		// for Y that satisfies `not q`. This is a requirement for negation - [gree] contains a nice description.
@@ -73,13 +57,51 @@ public class Rule {
 		// them, i.e. a rule like `s(A, B) :- r(A,B), A > X` is invalid ('=' is an exception because it can bind variables)
 		// You won't be able to tell if the variables have been bound to _numeric_ values until you actually evaluate the
 		// expression, though.
-		Set<String> positiveVars = body.stream()
-			.flatMap(expr -> (!expr.isNegated() && !(expr.isBuiltIn() && !expr.predicate.equals("="))) ? expr.terms.stream() : Stream.empty())
-			.filter(term -> JDatalog.isVariable(term))
-			.collect(Collectors.toSet());
-		bodyVars.removeAll(positiveVars);
-		if(!bodyVars.isEmpty()) {
-			throw new DatalogException("Each variable of rule " + toString() + " must appear in at least one positive expression: " + JDatalog.toString(bodyVars));
+		Set<String> bodyVariables = new HashSet<String>();
+		for(Expr clause : body) {
+			if (clause.isBuiltIn()) {
+				if (clause.terms.size() != 2)
+					throw new DatalogException("Operator " + clause.predicate + " must have only two operands");
+				String a = clause.terms.get(0);
+				String b = clause.terms.get(1);
+				if (clause.predicate.equals("=")) {
+					if (JDatalog.isVariable(a) && JDatalog.isVariable(b) && !bodyVariables.contains(a)
+							&& !bodyVariables.contains(b)) {
+						throw new DatalogException("Both variables of '=' are unbound in clause " + a + " = " + b);
+					}
+				} else {
+					if (JDatalog.isVariable(a) && !bodyVariables.contains(a)) {
+						throw new DatalogException("Unbound variable " + a + " in " + clause);
+					}
+					if (JDatalog.isVariable(b) && !bodyVariables.contains(b)) {
+						throw new DatalogException("Unbound variable " + b + " in " + clause);
+					}
+				}
+			} 
+			if(clause.isNegated()) {
+				for (String term : clause.terms) {
+					if (JDatalog.isVariable(term) && !bodyVariables.contains(term)) {
+						throw new DatalogException("Variable " + term + " of rule " + toString() + " must appear in at least one positive expression");
+					}
+				}
+			} else {
+				for (String term : clause.terms) {
+					if (JDatalog.isVariable(term)) {
+						bodyVariables.add(term);
+					}
+				}
+			}
+		}
+		
+		// Enforce the rule that variables in the head must appear in the body
+		for (String term : head.terms) {
+			if (!JDatalog.isVariable(term)) {
+				throw new DatalogException("Constant " + term + " in head of rule " + toString());
+			}
+			if (!bodyVariables.contains(term)) {
+				throw new DatalogException(
+						"Variables " + term + " from the head of rule " + toString() + " must appear in the body");
+			}
 		}
 	}
 

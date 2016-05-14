@@ -78,9 +78,7 @@ public class ExprTest {
 		bindings.clear();
 		assertTrue(e4.unify(e1, bindings));
 		assertTrue(bindings.get("Y").equals("a"));
-		assertTrue(bindings.get("X").equals("b"));
-		
-		
+		assertTrue(bindings.get("X").equals("b"));		
 	}
 	
 	@Test
@@ -193,7 +191,7 @@ public class ExprTest {
 			bindings.clear();
 			e1.evalBuiltIn(bindings);
 			assertFalse(true);
-		} catch (DatalogException e) {
+		} catch (RuntimeException e) {
 			assertTrue(true);
 		}		
 
@@ -250,7 +248,7 @@ public class ExprTest {
 			bindings.clear();
 			e1.evalBuiltIn(bindings);
 			assertFalse(true);
-		} catch (DatalogException e) {
+		} catch (RuntimeException e) {
 			assertTrue(true);
 		}
 		
@@ -259,7 +257,7 @@ public class ExprTest {
 			bindings.put("X", "10");
 			e1.evalBuiltIn(bindings);
 			assertFalse(true);
-		} catch (DatalogException e) {
+		} catch (RuntimeException e) {
 			assertTrue(true);
 		}
 		
@@ -268,7 +266,7 @@ public class ExprTest {
 			bindings.put("Y", "10");
 			e1.evalBuiltIn(bindings);
 			assertFalse(true);
-		} catch (DatalogException e) {
+		} catch (RuntimeException e) {
 			assertTrue(true);
 		}
 		
@@ -320,21 +318,11 @@ public class ExprTest {
 		bindings.put("X", "100");
 		bindings.put("Y", "aaa");		
 		e1 = new Expr("<", "X", "Y");
-		try {
-			e1.evalBuiltIn(bindings);
-			assertTrue(false);
-		} catch (DatalogException e) {
-			assertTrue(true);
-		}
+		assertFalse(e1.evalBuiltIn(bindings));
 		
 		bindings.put("X", "aaa");
 		bindings.put("Y", "100");		
 		e1 = new Expr("<", "X", "Y");
-		try {
-			e1.evalBuiltIn(bindings);
-			assertTrue(false);
-		} catch (DatalogException e) {
-			assertTrue(true);
-		}
+		assertTrue(e1.evalBuiltIn(bindings));
 	}
 }

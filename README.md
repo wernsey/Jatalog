@@ -90,6 +90,10 @@ JDatalog is licensed under the [Apache license version 2](http://www.apache.org/
 
 *Just some thoughts on how the system is currently implemented and how it can be improved in the future*
 
+TODO: I could've named the program Jatalog. _Catchy!_
+
+----
+
 It occurred to me that if you *really* want the equivalent of JDBC *prepared statements* then you can pass pass in a `Map<String, String>` containing
 the bound variables. This map will then be sent all the way down to `matchRule()` where it can be passed as the `bindings` parameter in the call
 to `matchGoals()` - so the map will end up at the bottom of the StackMap stack.
@@ -104,10 +108,12 @@ Actually, the `List<Expr>` should be wrapped in a `JStatement` (or something) in
 
 ----
 
-There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to `expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular). The biggest obstacle at the moment is that the `Expr#evalBuiltIn()` throws a `DatalogException`, and `DatalogException is` necessarily checked because it is used for proper reporting of user errors.
+There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to 
+`expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular).
 
-It seems the most practical solution is to wrap the DatalogException in a `RuntimeException` and then unwrap it at a higher level. 
-See [this answer on StackOverflow](http://stackoverflow.com/a/27648758/115589)
+I've now gone through the effort of removing the `DatalogException`s from `expandStrata()` on down to open the road for this
+implementation. `Expr#evalBuiltIn()` may throw a `RuntimeException` for one of a number of conditions which are supposed to be
+caught earlier, like in `Rule#validate()`.
 
 ----
 
@@ -138,14 +144,17 @@ Actually, you can filter out the facts in the same way that you filter the rules
 
 The EDB can also be hidden behind an `EdbProvider` interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
 users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For example, an EDB that is 
-backed by a database can do a `SELECT * from predicate` when necessary. 
+backed by a database can do a `SELECT * FROM predicate` when necessary. 
+
+This SQL idea may have a problem because you'll require statements like `query = "SELECT * FROM " + predicate;` to manage it.  
 
 You need to retrieve all relevant facts in the `query(List<Expr> goals)`.
 
 Such an `EdbProvider` interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
 `JDatalog#execute()` and `JDatalog#fact()` methods.
 
-The `JDatalog#validate()` method will need to be modified as well - maybe it is not such a good idea...
+The `JDatalog#validate()` method will need to be modified as well: The EdbProvider will have to validate the facts itself because
+facts stored in memory may have to be validated differently from facts backed by a database.
 
 Perhaps the EdbProvider interface should implement the Iterator interface as well?
 

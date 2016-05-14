@@ -12,11 +12,12 @@ public class RuleTest {
 		Rule rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B"));
 		rule.validate();
 		assertTrue(true);
-		
-		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("q", "C"), new Expr("=", "C", "B"));
+
+		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("q", "C"),
+				new Expr("=", "C", "B"));
 		rule.validate();
 		assertTrue(true);
-		
+
 		try {
 			// The variable C must appear in the body - exception thrown
 			rule = new Rule(new Expr("p", "A", "C"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B"));
@@ -24,25 +25,105 @@ public class RuleTest {
 			assertFalse(true);
 		} catch (DatalogException e) {
 			assertTrue(true);
-		}	
-		
+		}
+
 		try {
-			// Variable B must appear in a positive expression - exception thrown
+			// Variable B must appear in a positive expression - exception
+			// thrown
 			rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("<>", "A", "B"));
 			rule.validate();
 			assertFalse(true);
 		} catch (DatalogException e) {
 			assertTrue(true);
-		}	
+		}
 
 		try {
-			// Again, variable B must appear in a positive expression - exception thrown
+			// Again, variable B must appear in a positive expression -
+			// exception thrown
 			rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), Expr.not("q", "B"));
 			rule.validate();
 			assertFalse(true);
 		} catch (DatalogException e) {
 			assertTrue(true);
-		}		
+		}
+
+		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), Expr.eq("A", "B"));
+		rule.validate();
+		assertTrue(true);
+
+		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), Expr.eq("a", "B"));
+		rule.validate();
+		assertTrue(true);
+
+		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "B"), Expr.eq("A", "b"));
+		rule.validate();
+		assertTrue(true);
+
+		try {
+			// Invalid number of operands
+			rule = new Rule(new Expr("p", "A", "B"), Expr.expr("=", "A", "B", "C"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
+		try {
+			// Both operands of '=' unbound - exception thrown
+			rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), Expr.eq("C", "D"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
+		try {
+			// Left operand unbound - exception thrown
+			rule = new Rule(new Expr("p", "A", "B"), Expr.ne("C", "B"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
+		try {
+			// Right operand unbound - exception thrown
+			rule = new Rule(new Expr("p", "A", "B"), Expr.ne("A", "C"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
+		rule = new Rule(new Expr("p", "A"), new Expr("q", "A"), Expr.ne("A", "a"));
+		rule.validate();
+		assertTrue(true);
+		rule = new Rule(new Expr("p", "A"), new Expr("q", "A"), Expr.ne("a", "A"));
+		rule.validate();
+		assertTrue(true);
+
+		rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A", "B"), Expr.not("r", "A", "B"));
+		rule.validate();
+		assertTrue(true);
+
+		try {
+			// Right operand unbound - exception thrown
+			rule = new Rule(new Expr("p", "A", "B"), Expr.expr("q", "a", "A"), Expr.not("q", "b", "B"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
+		try {
+			// Right operand unbound - exception thrown
+			rule = new Rule(new Expr("p", "a"), Expr.expr("q", "A"));
+			rule.validate();
+			assertFalse(true);
+		} catch (DatalogException e) {
+			assertTrue(true);
+		}
+
 	}
 
 	@Test

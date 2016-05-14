@@ -1,15 +1,12 @@
 package za.co.wstoop.jdatalog;
 
-
-import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Map;
 
-import static za.co.wstoop.jdatalog.JDatalog.expr;
+import org.junit.Test;
 
 // TODO: Code coverage could be better... 
 public class FluentTest {
@@ -27,17 +24,17 @@ public class FluentTest {
                 .fact("parent", "aaa", "aaaa")
                 .fact("parent", "c", "ca");
 
-			jDatalog.rule(expr("ancestor", "X", "Y"), expr("parent", "X", "Z"), expr("ancestor", "Z", "Y"))
-					.rule(expr("ancestor", "X", "Y"), expr("parent", "X", "Y"))
-					.rule(expr("sibling", "X", "Y"), expr("parent", "Z", "X"), expr("parent", "Z", "Y"), Expr.ne("X", "Y"))
-					.rule(expr("related", "X", "Y"), expr("ancestor", "Z", "X"), expr("ancestor", "Z", "Y"));
+			jDatalog.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Z"), Expr.expr("ancestor", "Z", "Y"))
+					.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Y"))
+					.rule(Expr.expr("sibling", "X", "Y"), Expr.expr("parent", "Z", "X"), Expr.expr("parent", "Z", "Y"), Expr.ne("X", "Y"))
+					.rule(Expr.expr("related", "X", "Y"), Expr.expr("ancestor", "Z", "X"), Expr.expr("ancestor", "Z", "Y"));
 
 			jDatalog.validate();
 			
             Collection<Map<String, String>> answers;
 
             // Run a query "who are siblings?"; print the answers
-            answers = jDatalog.query(expr("sibling", "A", "B"));
+            answers = jDatalog.query(Expr.expr("sibling", "A", "B"));
             // Siblings are aaa-aab and aa-ab as well as the reverse
             assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
@@ -45,26 +42,26 @@ public class FluentTest {
             assertTrue(TestUtils.answerContains(answers, "A", "aa", "B", "ab"));
 
             // Run a query "who are aa's descendants?"; print the answers
-            answers = jDatalog.query(expr("ancestor", "aa", "X"));
+            answers = jDatalog.query(Expr.expr("ancestor", "aa", "X"));
             assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "X", "aab"));
             assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
 
             // This demonstrates how you would use a built-in predicate in the fluent API.
-            answers = jDatalog.query(expr("parent", "aa", "A"), expr("parent", "aa", "B"), Expr.ne("A", "B"));            
+            answers = jDatalog.query(Expr.expr("parent", "aa", "A"), Expr.expr("parent", "aa", "B"), Expr.ne("A", "B"));            
             assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
 
             // Test deletion
-            assertTrue(jDatalog.getEdb().contains(expr("parent", "aa", "aaa")));
-            assertTrue(jDatalog.getEdb().contains(expr("parent", "aaa", "aaaa")));
+            assertTrue(jDatalog.getEdb().contains(Expr.expr("parent", "aa", "aaa")));
+            assertTrue(jDatalog.getEdb().contains(Expr.expr("parent", "aaa", "aaaa")));
             // This query deletes parent(aa,aaa) and parent(aaa,aaaa)
-            jDatalog.delete(expr("parent", "aa", "X"), expr("parent", "X", "aaaa")); 
-            assertFalse(jDatalog.getEdb().contains(expr("parent", "aa", "aaa")));
-            assertFalse(jDatalog.getEdb().contains(expr("parent", "aaa", "aaaa")));
+            jDatalog.delete(Expr.expr("parent", "aa", "X"), Expr.expr("parent", "X", "aaaa")); 
+            assertFalse(jDatalog.getEdb().contains(Expr.expr("parent", "aa", "aaa")));
+            assertFalse(jDatalog.getEdb().contains(Expr.expr("parent", "aaa", "aaaa")));
 
             // "who are aa's descendants now?"
-            answers = jDatalog.query(expr("ancestor", "aa", "X"));
+            answers = jDatalog.query(Expr.expr("ancestor", "aa", "X"));
 
         } catch (DatalogException e) {
             e.printStackTrace();

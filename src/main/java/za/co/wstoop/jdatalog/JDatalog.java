@@ -155,8 +155,6 @@ public class JDatalog {
         }
     }
 
-    
-
     /**
      * Executes a Datalog statement.
      * @param statement the statement to execute as a string
@@ -225,13 +223,13 @@ public class JDatalog {
             IndexedSet<Expr,String> facts = new IndexedSet<>(edb);
 
             // Build the database. A Set ensures that the facts are unique
-            IndexedSet<Expr,String> dataset = expandDatabase(facts, rules);
+            IndexedSet<Expr,String> resultSet = expandDatabase(facts, rules);
             if(debugEnable) {
-                System.out.println("query(): Database = " + toString(dataset));
+                System.out.println("query(): Database = " + toString(resultSet));
             }
             
             // Now match the expanded database to the goals
-            return matchGoals(orderedGoals, dataset, null);
+            return matchGoals(orderedGoals, resultSet, null);
         } finally {
             timer.stop();
         }
@@ -251,7 +249,7 @@ public class JDatalog {
 
     /* Returns a list of rules that are relevant to the query.
         If for example you're querying employment status, you don't care about family relationships, etc.
-        The advantages of this of this optimization becomes bigger the complexer the rules get. */
+        The advantages of this of this optimization becomes bigger the more complex the rules get. */
     private Collection<Rule> getRelevantRules(List<Expr> originalGoals) {
         Profiler.Timer timer = Profiler.getTimer("getRelevantRules");
         try {
@@ -323,7 +321,7 @@ public class JDatalog {
     /* The core of the bottom-up implementation:
      * It computes the stratification of the rules in the EDB and then expands each
      * strata in turn, returning a collection of newly derived facts. */
-    private IndexedSet<Expr,String> expandDatabase(IndexedSet<Expr,String> facts, Collection<Rule> allRules) throws DatalogException  {
+    private IndexedSet<Expr,String> expandDatabase(IndexedSet<Expr,String> facts, Collection<Rule> allRules) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("buildDatabase");
         try {
             List< Collection<Rule> > strata = computeStratification(allRules);
@@ -420,7 +418,7 @@ public class JDatalog {
      * The semi-naive part is to only use the rules that are affected by newly derived
      * facts in each iteration of the loop.
      */
-    private Collection<Expr> expandStrata(IndexedSet<Expr,String> facts, Collection<Rule> strataRules) throws DatalogException {
+    private Collection<Expr> expandStrata(IndexedSet<Expr,String> facts, Collection<Rule> strataRules) {
         Profiler.Timer timer = Profiler.getTimer("expandStrata");
         try {
             Collection<Rule> rules = strataRules;
@@ -468,7 +466,7 @@ public class JDatalog {
     }
 
     /* Match the facts in the EDB against a specific rule */
-    private Set<Expr> matchRule(IndexedSet<Expr,String> facts, Rule rule) throws DatalogException {
+    private Set<Expr> matchRule(IndexedSet<Expr,String> facts, Rule rule) {
         Profiler.Timer timer = Profiler.getTimer("matchRule");
         try {
             if(rule.body.isEmpty()) // If this happens, you're using the API wrong.
@@ -490,7 +488,7 @@ public class JDatalog {
 
     /* Match the goals in a rule to the facts in the database (recursively). 
      * If the goal is a built-in predicate, it is also evaluated here. */
-    private Collection<Map<String, String>> matchGoals(List<Expr> goals, IndexedSet<Expr,String> facts, Map<String, String> bindings) throws DatalogException {
+    private Collection<Map<String, String>> matchGoals(List<Expr> goals, IndexedSet<Expr,String> facts, Map<String, String> bindings) {
 
         Expr goal = goals.get(0); // First goal; Assumes goals won't be empty
 
@@ -583,12 +581,12 @@ public class JDatalog {
             }
             // else if(fact.isBuiltIn()) // I allow facts like `a = 5` or `=(a,5)`
 
+            // Technically we don't really need to check whether the facts with the same predicate have 
+            // the same arity, since they simply won't unify with goals in the queries.            
             for(int j = i + 1; j < edb.size(); j++) {
                 Expr that = edb.get(j);
                 if(fact.predicate.equals(that.predicate)) {
                     if(fact.arity() != that.arity()) {
-                        // Technically we don't really require the arity of two facts to be the same if they have the same
-                        // predicate, since they simply won't unify with the goals in the queries.
                         throw new DatalogException("Arity mismatch in EDB: " + fact.predicate + "/" + fact.arity()
                             + " vs " + that.predicate + "/" + that.arity());
                     }
@@ -613,18 +611,6 @@ public class JDatalog {
     }
 
     // Methods for the fluent interface
-    
-    /**
-     * Helper method for creating a new expression.
-     * This method is part of the fluent API intended for {@code import static}
-     * @param predicate The predicate of the expression.
-     * @param terms The terms of the expression.
-     * @return the new expression
-     * @see Expr
-     */
-    public static Expr expr(String predicate, String... terms) {
-    	return new Expr(predicate, terms);
-    }
     
     /**
      * Adds a new {@link Rule} to the IDB database.

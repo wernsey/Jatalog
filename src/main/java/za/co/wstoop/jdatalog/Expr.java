@@ -153,14 +153,16 @@ public class Expr implements Indexable<String> {
     }
 
     /**
-     * Evaluates a built-in predicate.
+     * Evaluates a built-in predicate. 
      * @param bindings 
      * @return true if the operator matched.
-     * @throws DatalogException for a variety of possible errors.
      */
-    boolean evalBuiltIn(Map<String, String> bindings) throws DatalogException {
-        //System.out.println("EVAL " + this + "; " + bindings);
-        String term1 = terms.get(0);
+    boolean evalBuiltIn(Map<String, String> bindings) {
+    	// This method may throw a RuntimeException for a variety of possible reasons, but 
+    	// these conditions are supposed to have been caught earlier in the chain by 
+    	// methods such as Rule#validate().
+    	// The RuntimeException is a requirement of using the Streams API.
+    	String term1 = terms.get(0);
         if(JDatalog.isVariable(term1) && bindings.containsKey(term1))
             term1 = bindings.get(term1);
         String term2 = terms.get(1);
@@ -170,7 +172,8 @@ public class Expr implements Indexable<String> {
             // '=' is special
             if(JDatalog.isVariable(term1)) {
                 if(JDatalog.isVariable(term2)) {
-                    throw new DatalogException("Both operands of '=' are unbound (" + term1 + ", " + term2 + ") in evaluation of " + this);
+                	// Rule#validate() was supposed to catch this condition
+                    throw new RuntimeException("Both operands of '=' are unbound (" + term1 + ", " + term2 + ") in evaluation of " + this);
                 }
                 bindings.put(term1, term2);
                 return true;
@@ -190,11 +193,11 @@ public class Expr implements Indexable<String> {
             try {
             	
             	// These errors can be detected in the validate method:
-                if(JDatalog.isVariable(term1))
-                    throw new DatalogException("Unbound variable " + term1 + " in evaluation of " + this);
-                if(JDatalog.isVariable(term2))
-                    throw new DatalogException("Unbound variable " + term2 + " in evaluation of " + this);
-
+                if(JDatalog.isVariable(term1) || JDatalog.isVariable(term2)) {
+                	// Rule#validate() was supposed to catch this condition
+                	throw new RuntimeException("Unbound variable in evaluation of " + this);
+                }
+                
                 if(predicate.equals("<>")) {
                     // '<>' is also a bit special
                     if(DatalogParser.tryParseDouble(term1) && DatalogParser.tryParseDouble(term2)) {
@@ -205,12 +208,15 @@ public class Expr implements Indexable<String> {
                         return !term1.equals(term2);
                     }
                 } else {
-                    // ordinary comparison operator
-                    if(!DatalogParser.tryParseDouble(term1) || !DatalogParser.tryParseDouble(term2)) {
-                        throw new DatalogException("Both parameters of " + predicate + " must be numeric (" + term1 + ", " + term2 + ") in evaluation of " + this);
+                    // Ordinary comparison operator
+                	// If the term doesn't parse to a double it gets treated as 0.0.
+                	double d1 = 0.0, d2 = 0.0;
+                    if(DatalogParser.tryParseDouble(term1)) {
+                    	d1 = Double.parseDouble(term1);
                     }
-                    double d1 = Double.parseDouble(term1);
-                    double d2 = Double.parseDouble(term2);
+                    if(DatalogParser.tryParseDouble(term2)) {
+                    	d2 = Double.parseDouble(term2);
+                    }
                     switch(predicate) {
                         case "<": return d1 < d2;
                         case "<=": return d1 <= d2;
@@ -289,6 +295,17 @@ public class Expr implements Indexable<String> {
             sb.append(term);
         return sb;
     }
+
+	/**
+	 * Helper method for creating a new expression.
+	 * This method is part of the fluent API intended for {@code import static}
+	 * @param predicate The predicate of the expression.
+	 * @param terms The terms of the expression.
+	 * @return the new expression
+	 */
+	public static Expr expr(String predicate, String... terms) {
+		return new Expr(predicate, terms);
+	}
 
     /**
      * Static method for constructing negated expressions in the fluent API.
