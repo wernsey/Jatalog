@@ -384,4 +384,17 @@ public class Expr implements Indexable<String> {
 	public String index() {		
 		return predicate;
 	}
+
+	/**
+	 * Validates a fact in the IDB.
+	 * Valid facts must be ground and cannot be negative.
+	 * @throws DatalogException if the fact is invalid.
+	 */
+	public void validFact() throws DatalogException {
+		if(!isGround()) {
+            throw new DatalogException("Fact " + this + " is not ground");
+        } else if(isNegated()) {
+            throw new DatalogException("Fact " + this + " is negated");
+        }
+	}
 }

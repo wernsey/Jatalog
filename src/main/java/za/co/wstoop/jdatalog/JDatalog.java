@@ -75,9 +75,6 @@ public class JDatalog {
     private List<Expr> edb;         // Facts
     private Collection<Rule> idb;   // Rules
 
-    // TODO: I don't like this. Remove.
-    private static boolean debugEnable = false;
-
     /**
      * Default constructor.
      * <p>
@@ -123,8 +120,6 @@ public class JDatalog {
     public Collection<Map<String, String>> execute(Reader reader, QueryOutput output) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("execute");
         try {
-            debug("Executing reader...");
-
             StreamTokenizer scan = new StreamTokenizer(reader);
             scan.ordinaryChar('.'); // '.' looks like a number to StreamTokenizer by default
             scan.commentChar('%'); // Prolog-style % comments; slashSlashComments and slashStarComments can stay as well.
@@ -216,17 +211,11 @@ public class JDatalog {
             // do some benchmarking of expandDatabase(), I use the IDB directly instead:
             // Collection<Rule> rules = idb;
             Collection<Rule> rules = getRelevantRules(goals);
-            if(debugEnable) {
-                System.out.println("To answer query, we need to evaluate: " + toString(rules));
-            }
             
             IndexedSet<Expr,String> facts = new IndexedSet<>(edb);
 
             // Build the database. A Set ensures that the facts are unique
             IndexedSet<Expr,String> resultSet = expandDatabase(facts, rules);
-            if(debugEnable) {
-                System.out.println("query(): Database = " + toString(resultSet));
-            }
             
             // Now match the expanded database to the goals
             return matchGoals(orderedGoals, resultSet, null);
@@ -326,7 +315,6 @@ public class JDatalog {
         try {
             List< Collection<Rule> > strata = computeStratification(allRules);
             for(int i = 0; i < strata.size(); i++) {
-                debug("Expanding strata " + i);
                 Collection<Rule> rules = strata.get(i);
                 if(rules != null && !rules.isEmpty()) {
                     expandStrata(facts, rules);
@@ -353,9 +341,6 @@ public class JDatalog {
                 if(stratum == null) {
                     stratum = depthFirstSearch(rule.head, allRules, new ArrayList<>(), 0);
                     strats.put(pred, stratum);
-                    if(debugEnable) {
-                        System.out.println("Strata{" + pred + "} == " + strats.get(pred));
-                    }
                 }
 
                 while(stratum >= strata.size()) {
@@ -428,34 +413,24 @@ public class JDatalog {
             while(true) {
                 Profiler.Timer loopTimer = Profiler.getTimer("loopTimer");
                 try {
-
                     // Match each rule to the facts
-                    Profiler.Timer matchRuleTimer = Profiler.getTimer("matchRules");
                     Set<Expr> newFacts = new HashSet<>();
                     for(Rule rule : rules) {
                         newFacts.addAll(matchRule(facts, rule));
                     }
-                    matchRuleTimer.stop();
 
                     // Delta facts: The new facts that have been added in this iteration for semi-naive evaluation.
-                    Profiler.Timer deltaFactsTimer = Profiler.getTimer("deltaFacts");
                     newFacts.removeAll(facts);
-                    deltaFactsTimer.stop();
 
                     // Repeat until there are no more facts added
                     if(newFacts.isEmpty()) {
                         return facts;
                     }
-                    if(debugEnable) {
-                        System.out.println("expandStrata(): deltaFacts = " + toString(newFacts));
-                    }
 
+                    // Determine which rules depend on the newly derived facts
                     rules = getDependentRules(newFacts, dependentRules);
 
-                    Profiler.Timer addAllTimer = Profiler.getTimer("addAll");
                     facts.addAll(newFacts);
-                    addAllTimer.stop();
-
                 } finally {
                     loopTimer.stop();
                 }
@@ -499,9 +474,6 @@ public class JDatalog {
             boolean eval = goal.evalBuiltIn(newBindings);
             if(eval && !goal.isNegated() || !eval && goal.isNegated()) {
                 if(lastGoal) {
-                    if(debugEnable) {
-                        System.out.println("** (+) Goal: " + goal + "; " + newBindings);
-                    }
                     return Collections.singletonList(newBindings);
                 } else {
                     return matchGoals(goals.subList(1, goals.size()), facts, newBindings);
@@ -519,9 +491,6 @@ public class JDatalog {
                 Map<String, String> newBindings = new StackMap<String, String>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     if(lastGoal) {
-                        if(debugEnable) {
-                            System.out.println("** (+) Goal: " + goal + "; " + newBindings);
-                        }
                         answers.add(newBindings);
                     } else {
                         // More goals to match. Recurse with the remaining goals.
@@ -546,9 +515,6 @@ public class JDatalog {
                 }
             }
             // not found
-            if(debugEnable) {
-                System.out.println("** (-) Goal: " + goal + "; " + bindings);
-            }
             if(lastGoal) {
                 answers.add(bindings);
             } else {
@@ -560,8 +526,6 @@ public class JDatalog {
 
     /**
      * Validates all the rules and facts in the database.
-     * <p>TODO: Certain problems, such as comparison between unbound variables can only be detected 
-     * when the query is executed and won't cause a validation failure. <i>It should be possible to fix this</i></p>
      * @throws DatalogException If any rules or facts are invalid. The message contains the reason.
      */
     public void validate() throws DatalogException {
@@ -572,26 +536,9 @@ public class JDatalog {
         // Search for negated loops:
         computeStratification(idb);
 
-        for(int i = 0; i < edb.size(); i++) {
-            Expr fact = edb.get(i);
-            if(!fact.isGround()) {
-                throw new DatalogException("Fact " + fact + " is not ground");
-            } else if(fact.isNegated()) {
-                throw new DatalogException("Fact " + fact + " is negated");
-            }
-            // else if(fact.isBuiltIn()) // I allow facts like `a = 5` or `=(a,5)`
-
-            // Technically we don't really need to check whether the facts with the same predicate have 
-            // the same arity, since they simply won't unify with goals in the queries.            
-            for(int j = i + 1; j < edb.size(); j++) {
-                Expr that = edb.get(j);
-                if(fact.predicate.equals(that.predicate)) {
-                    if(fact.arity() != that.arity()) {
-                        throw new DatalogException("Arity mismatch in EDB: " + fact.predicate + "/" + fact.arity()
-                            + " vs " + that.predicate + "/" + that.arity());
-                    }
-                }
-            }
+        for(Expr fact : edb) {
+        	fact.validFact();
+            
         }
     }
 
@@ -696,9 +643,6 @@ public class JDatalog {
                 // and substitute the answer on each goal
                 .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
                 .collect(Collectors.toList());
-            if(debugEnable) {
-                System.out.println("Facts to delete: " + toString(facts));
-            }
             return edb.removeAll(facts);
         } finally {
             timer.stop();
@@ -740,18 +684,6 @@ public class JDatalog {
         sb.append("}");
         return sb.toString();
     }
-
-    // TODO: I'm not happy with this. Remove later.
-    static void debug(String message) {
-        if(debugEnable) {
-            System.out.println(message);
-        }
-    }
-    
-    // TODO: I'm not happy with this. Remove later.
-	static boolean isDebugEnabled() {
-		return debugEnable;
-	}
 
 	/* Only used for unit testing */
 	List<Expr> getEdb() {

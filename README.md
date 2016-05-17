@@ -153,10 +153,11 @@ You need to retrieve all relevant facts in the `query(List<Expr> goals)`.
 Such an `EdbProvider` interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
 `JDatalog#execute()` and `JDatalog#fact()` methods.
 
-The `JDatalog#validate()` method will need to be modified as well: The EdbProvider will have to validate the facts itself because
-facts stored in memory may have to be validated differently from facts backed by a database.
+The `JDatalog#validate()` method will need to be modified as well: The `EdbProvider` will have to validate the facts itself because
+facts stored in memory may have to be validated differently from facts backed by a database. My concern is that iterating through all of the
+facts in a database on disk may not scale that well if the number of facts increases. See my comments in the `validate()` method. 
 
-Perhaps the EdbProvider interface should implement the Iterator interface as well?
+Perhaps the `EdbProvider` interface should extend the `Iterator` interface as well?
 
 ----
 

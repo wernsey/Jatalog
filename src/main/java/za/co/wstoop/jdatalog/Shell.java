@@ -58,9 +58,6 @@ public class Shell {
                         JDatalog jDatalog = new JDatalog();
 
                         for (String arg : args) {
-                            if (JDatalog.isDebugEnabled()) {
-                                System.out.println("Executing file " + arg);
-                            }
                             try (Reader reader = new BufferedReader(new FileReader(arg))) {
                                 jDatalog.execute(reader, qo);
                             }
@@ -78,9 +75,6 @@ public class Shell {
                     JDatalog jDatalog = new JDatalog();
                     QueryOutput qo = new DefaultQueryOutput();
                     for (String arg : args) {
-                        if (JDatalog.isDebugEnabled()) {
-                            System.out.println("Executing file " + arg);
-                        }
                         try (Reader reader = new BufferedReader(new FileReader(arg))) {
                             jDatalog.execute(reader, qo);
                         }

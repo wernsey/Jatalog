@@ -38,9 +38,6 @@ class DatalogParser {
                 if(scan.ttype != '.') {
                     throw new DatalogException("[line " + scan.lineno() + "] Expected '.' after 'delete'");
                 }
-                if(JDatalog.isDebugEnabled()) {
-                    System.out.println("Parser [line " + scan.lineno() + "]: Deleting goals: " + JDatalog.toString(goals));
-                }
                 jDatalog.delete(goals);
                 return null;
             } else {
@@ -65,7 +62,6 @@ class DatalogParser {
                 try {
                     Rule newRule = new Rule(head, body);
                     jDatalog.rule(newRule);
-                    JDatalog.debug("Parser [line " + scan.lineno() + "]: Got rule: " + newRule);
                 } catch (DatalogException de) {
                     throw new DatalogException("[line " + scan.lineno() + "] Rule is invalid", de);
                 }
@@ -75,7 +71,6 @@ class DatalogParser {
                     // It's a fact
                     try {
                     	jDatalog.fact(head);
-                    	JDatalog.debug("Parser [line " + scan.lineno() + "]: Got fact: " + head);
                     } catch (DatalogException de) {
                         throw new DatalogException("[line " + scan.lineno() + "] Fact is invalid", de);
                     }
@@ -92,7 +87,6 @@ class DatalogParser {
                         goals.add(parseExpr(scan));
                         scan.nextToken();
                     }
-                    JDatalog.debug("Parser [line " + scan.lineno() + "]: Got query: " + JDatalog.toString(goals));
 
                     if(scan.ttype == '?') {
                         try {
@@ -145,7 +139,6 @@ class DatalogParser {
                 scan.pushBack();
                 Expr e = parseBuiltInPredicate(lhs, scan);
                 e.negated = negated;
-                JDatalog.debug("Got built-in predicate: " + e);
                 return e;
             }
 
