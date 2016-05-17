@@ -1,15 +1,14 @@
-# Java Datalog Engine with Stratified Negation
+# Java Datalog Engine with Semi-Naive Evaluation and Stratified Negation
 
 ## Notes, Features and Properties:
 
+* The engine implements semi-naive bottom-up evaluation.
 * It implements stratified negation, or Stratified Datalog~.
 * It can parse and evaluate Datalog programs from files and Strings (actually anything that implements java.io.Reader).
 * It has a fluent API through which it can be embedded in Java applications to run queries. See the main() method for examples.
 * It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
 * It avoids third party dependencies because it is a proof-of-concept. It should be able to stand alone.
-* Values with "quoted strings" are supported, but to prevent a value like "Hello World" from being confused with a variable, it is stored internally with a " prefix, i.e. "Hello" is stored as `"Hello`. 
-    This is why the `toString(Map<String, String> bindings)` method uses `substring(1)` on the term.
-* Also, predicates can't be in quotes. Is this a desirable feature?
+* Values with "quoted strings" are supported.
 
 ## Usage
 
@@ -121,14 +120,6 @@ The Racket language has a Datalog module as part of its library [rack]. I've loo
 
 ----
 
-It is conceptually possible to make the `List<String> terms` of `Expr` a `List<Object>` instead, so that you can store complex Java objects in the database (as POJOs). 
-
-The `isVariable()` method will just have to be modified to check whether its parameter is `instanceof` String and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
-
-It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. I don't intend to implement it at the moment, though.
-
-----
-
 I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X + Y = Z`, for now:
 
 * Arithmetic predicates aren't that simple. They should be evaluated as soon as the input variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
@@ -161,6 +152,8 @@ Perhaps the `EdbProvider` interface should extend the `Iterator` interface as we
 
 ----
 
-I also have the feeling that `getRelevantRules()` can somehow be replaced by `buildDependentRules()` for some simplification, but I'm
-not sure how.
+It is conceptually possible to make the `List<String> terms` of `Expr` a `List<Object>` instead, so that you can store complex Java objects in the database (as POJOs). 
 
+The `isVariable()` method will just have to be modified to check whether its parameter is `instanceof` String and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
+
+It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. I don't intend to implement it at the moment, though.
