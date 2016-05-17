@@ -9,18 +9,19 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Subclass of {@link Set} that can 
+ * Subclass of {@link Set} that can quickly access a subset of its elements through an index.
+ * JDatalog uses it to quickly retrieve the facts with a specific predicate.   
  * @param <E> Type of elements that will be stored in the set; must implement {@link Indexable}
  * @param <I> Type of the index
  */
 class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
+	
+	private Set<E> contents;	
 
 	private Map<I, Set<E>> index;
 	
-	private Set<E> contents;
-	
 	/**
-	 * Default constructor
+	 * Default constructor.
 	 */
 	IndexedSet() {
 		index = new HashMap<I, Set<E>>();
@@ -28,20 +29,17 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	}
 	
 	/**
-	 * Creates the set from a different collection
+	 * Creates the set from a different collection.
 	 * @param elements
 	 */
-	IndexedSet(Collection<E> elements) {
-		index = new HashMap<I, Set<E>>();
-		contents = new HashSet<>();
-		for(E element : elements) {
-			add(element);
-		}
+	IndexedSet(Collection<E> elements) {		
+		contents = new HashSet<>(elements);
+		reindex();
 	}
 	
 	/**
 	 * Retrieves the subset of the elements in the set with the 
-	 * specified index
+	 * specified index.
 	 * @param key The indexed element
 	 * @return The specified subset
 	 */
@@ -51,24 +49,44 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 		return elements;
 	}
 	
+	public Collection<I> getIndexes() {
+		return index.keySet();
+	}
+	
+	private void reindex() {
+		index = new HashMap<I, Set<E>>();
+		for (E element : contents) {
+			Set<E> elements = index.get(element.index());
+			if (elements == null) {
+				elements = new HashSet<E>();
+				index.put(element.index(), elements);
+			}
+			elements.add(element);
+		}
+	}
+
 	@Override
 	public boolean add(E element) {
-		contents.add(element);
-		Set<E> elements = index.get(element.index());
-		if(elements == null) {
-			elements = new HashSet<E>();
-			index.put(element.index(), elements);
+		if (contents.add(element)) {
+			Set<E> elements = index.get(element.index());
+			if (elements == null) {
+				elements = new HashSet<E>();
+				index.put(element.index(), elements);
+			}
+			elements.add(element);
+			return true;
 		}
-		return elements.add(element);
-	}	
+		return false;
+	}
 
 	@Override
 	public boolean addAll(Collection<? extends E> elements) {
-		for(E e : elements) {
-			if(!add(e)) 
-				return false;
+		boolean result = false;
+		for(E element : elements) {
+			if(add(element)) 
+				result = true;
 		}
-		return true;
+		return result;
 	}
 
 	@Override
@@ -99,31 +117,31 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 
 	@Override
 	public boolean remove(Object o) {
-		// FIXME: I don't have StackOverflow at the moment to answer this question
-		if(o instanceof Indexable<?>) {
-			Indexable<I> e = (Indexable<I>)o;
-			Collection<E> es = getIndexed(e.index());
-			if(es == null || !es.remove(o)) 
-				return false;
-			return contents.remove(o);
+		if(contents.remove(o)) {
+			// This makes the remove O(n), but you need it like this if remove()
+			// is to work through an iterator.
+			// It doesn't really matter, since JDatalog doesn't use this method
+			reindex();
 		}
 		return false;
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		for(Object o : c) {
-			if(!remove(o)) {
-				return false;
-			}
+		boolean changed = contents.removeAll(c);
+		if (changed) {
+			reindex();
 		}
-		return true;
+		return changed;
 	}
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		// TODO What is this method supposed to do again?
-		return false;
+		boolean changed = contents.retainAll(c);
+		if (changed) {
+			reindex();
+		}
+		return changed;
 	}
 
 	@Override
