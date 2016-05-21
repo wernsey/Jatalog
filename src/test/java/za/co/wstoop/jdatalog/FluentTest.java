@@ -88,5 +88,27 @@ public class FluentTest {
 		}
     }
 		
+	@Test
+	public void testDemo() throws Exception {
+		// This is how you would use the fluent API:
+		try {
+			JDatalog jDatalog = new JDatalog();
+
+			jDatalog.fact("parent", "alice", "bob")
+				.fact("parent", "bob", "carol");
+
+			jDatalog.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Z"), Expr.expr("ancestor", "Z", "Y"))
+					.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Y"));
+			
+			Collection<Map<String, String>> answers;
+			answers = jDatalog.query(Expr.expr("ancestor", "X", "carol"));
+
+			assertTrue(TestUtils.answerContains(answers, "X", "alice"));
+			assertTrue(TestUtils.answerContains(answers, "X", "bob"));
+			
+		} catch (DatalogException e) {
+			e.printStackTrace();
+		}
+	}
 	
 }
