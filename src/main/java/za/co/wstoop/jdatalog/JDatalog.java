@@ -72,8 +72,8 @@ import java.util.stream.Collectors;
  */
 public class JDatalog {
 
-    private List<Expr> edb;         // Facts
-    private Collection<Rule> idb;   // Rules
+	private EdbProvider edbProvider;   // Facts
+    private Collection<Rule> idb;      // Rules
 
     /**
      * Default constructor.
@@ -82,7 +82,7 @@ public class JDatalog {
      * </p>
      */
     public JDatalog() {
-        this.edb = new ArrayList<>();
+        this.edbProvider = new BasicEdbProvider();
         this.idb = new ArrayList<>();
     }
 
@@ -194,47 +194,76 @@ public class JDatalog {
     /**
      * Executes a query with the specified goals against the database.
      * @param goals The list of goals of the query.
+     * @param bindings An optional (nullable) mapping of variable names to values. 
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
-     * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
+     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
-     public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("query");
-        try {
-            if(goals.isEmpty())
-                return Collections.emptyList();
+	public Collection<Map<String, String>> query(List<Expr> goals, Map<String, String> bindings)
+			throws DatalogException {
+		Profiler.Timer timer = Profiler.getTimer("query");
+		try {
+			if (goals.isEmpty())
+				return Collections.emptyList();
 
-            // Reorganize the goals so that negated literals are at the end.
-            List<Expr> orderedGoals = reorderQuery(goals);
+			// Reorganize the goals so that negated literals are at the end.
+			List<Expr> orderedGoals = reorderQuery(goals);
 
-            // getRelevantRules() strips a large part of the rules, so if I want to
-            // do some benchmarking of expandDatabase(), I use the IDB directly instead:
-            // Collection<Rule> rules = idb;
-            Collection<Rule> rules = getRelevantRules(goals);
-            
-            IndexedSet<Expr,String> facts = new IndexedSet<>(edb);
+			// getRelevantRules() strips a large part of the rules, so if I want to
+			// do some benchmarking of expandDatabase(), I use the IDB directly instead:
+			// Collection<Rule> rules = idb;
+			Collection<Rule> rules = getRelevantRules(goals);
 
-            // Build the database. A Set ensures that the facts are unique
-            IndexedSet<Expr,String> resultSet = expandDatabase(facts, rules);
-            
-            // Now match the expanded database to the goals
-            return matchGoals(orderedGoals, resultSet, null);
-        } finally {
-            timer.stop();
-        }
-    }
+			// TODO: There should be a mechanism here to filter the facts to only the ones relevant to the current query.
+			// See the notes in the README for more information.
+			IndexedSet<Expr, String> facts = new IndexedSet<>(edbProvider.allFacts());
 
-	 /**
-	  * Executes a query with the specified goals against the database.
-	  * This is part of the fluent API.
-	  * @param goals The goals of the query.
-	  * @return The answer of the last statement in the file, as a Collection of variable mappings.
-	  * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
-	  * @throws DatalogException on syntax errors encountered while executing. 
-	  */
-     public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
-         return query(Arrays.asList(goals));
-     }
+			// Build the database. A Set ensures that the facts are unique
+			IndexedSet<Expr, String> resultSet = expandDatabase(facts, rules);
+
+			// Now match the expanded database to the goals
+			return matchGoals(orderedGoals, resultSet, bindings);
+		} finally {
+			timer.stop();
+		}
+	}
+
+	/**
+	 * Executes a query with a single goal against the database.
+     * @param goal The goal of the query.
+     * @param bindings An optional (nullable) mapping of variable names to values. 
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
+     * @throws DatalogException on syntax errors encountered while executing. 
+	 */
+	public Collection<Map<String, String>> query(Expr goal, Map<String, String> bindings) throws DatalogException {
+		return query(Collections.singletonList(goal), bindings);
+	}
+
+	/**
+	 * Executes a query with the specified goals against the database.
+     * @param goals The list of goals of the query.
+     * @return The answer of the last statement in the file, as a Collection of variable mappings.
+     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
+     * @throws DatalogException on syntax errors encountered while executing. 
+	 */
+	public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
+		return query(goals, null);
+	}
+
+	/**
+	 * Executes a query with the specified goals against the database. This is
+	 * part of the fluent API. 
+	 * @param goals The goals of the query.
+	 * @return The answer of the last statement in the file, as a Collection of
+	 *         variable mappings. See {@link #execute(Reader, QueryOutput)} for
+	 *         details on how to interpret the result.
+	 * @throws DatalogException
+	 *             on syntax errors encountered while executing.
+	 */
+	public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
+		return query(Arrays.asList(goals), null);
+	}
 
     /* Returns a list of rules that are relevant to the query.
         If for example you're querying employment status, you don't care about family relationships, etc.
@@ -419,7 +448,7 @@ public class JDatalog {
                         newFacts.addAll(matchRule(facts, rule));
                     }
 
-                    // Delta facts: The new facts that have been added in this iteration for semi-naive evaluation.
+                    // The new facts that have been added in this iteration for semi-naive evaluation.
                     newFacts.removeAll(facts);
 
                     // Repeat until there are no more facts added
@@ -535,11 +564,8 @@ public class JDatalog {
 
         // Search for negated loops:
         computeStratification(idb);
-
-        for(Expr fact : edb) {
-        	fact.validFact();
-            
-        }
+        
+        edbProvider.validate();
     }
 
     /**
@@ -548,7 +574,7 @@ public class JDatalog {
      */
     public void dump(PrintStream out) {
         out.println("% Facts:");
-        for(Expr fact : edb) {
+        for(Expr fact : edbProvider.allFacts()) {
             out.println(fact + ".");
         }
         out.println("\n% Rules:");
@@ -615,7 +641,7 @@ public class JDatalog {
         }
         // You can also match the arity of the fact against existing facts in the EDB,
         // but it's more of a principle than a technical problem; see JDatalog#validate()
-        edb.add(newFact);
+        edbProvider.add(newFact);
         return this;
     }
 
@@ -626,9 +652,30 @@ public class JDatalog {
      * @throws DatalogException on errors encountered during evaluation.
      */
     public boolean delete(Expr... goals) throws DatalogException {
-        return delete(Arrays.asList(goals));
+        return delete(Arrays.asList(goals), null);
     }
 
+    /**
+     * Deletes all the facts in the database that matches a specific query 
+     * @param goals The query to which to match the facts.
+     * @param bindings An optional (nullable) mapping of variable names to values. 
+     * @return true if any facts were deleted.
+     * @throws DatalogException on errors encountered during evaluation.
+     */
+    public boolean delete(List<Expr> goals, Map<String, String> bindings) throws DatalogException {
+        Profiler.Timer timer = Profiler.getTimer("delete");
+        try {
+            Collection<Map<String, String>> answers = query(goals, bindings);
+            List<Expr> facts = answers.stream()
+                // and substitute the answer on each goal
+                .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
+                .collect(Collectors.toList());
+            return edbProvider.removeAll(facts);
+        } finally {
+            timer.stop();
+        }
+    }
+    
     /**
      * Deletes all the facts in the database that matches a specific query 
      * @param goals The query to which to match the facts.
@@ -636,17 +683,7 @@ public class JDatalog {
      * @throws DatalogException on errors encountered during evaluation.
      */
     public boolean delete(List<Expr> goals) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("delete");
-        try {
-            Collection<Map<String, String>> answers = query(goals);
-            List<Expr> facts = answers.stream()
-                // and substitute the answer on each goal
-                .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
-                .collect(Collectors.toList());
-            return edb.removeAll(facts);
-        } finally {
-            timer.stop();
-        }
+    	return delete(goals, null);
     }
 
     /**
@@ -684,10 +721,59 @@ public class JDatalog {
         sb.append("}");
         return sb.toString();
     }
+    
+    /**
+     * Helper method to convert a collection of answers to a String.
+     * <ul>
+	 * <li> If {@code answers} is null, the line passed to {@code jDatalog.query(line)} was a statement that didn't
+	 *      produce any results, like a fact or a rule, rather than a query.
+	 * <li> If {@code answers} is empty, then it was a query that doesn't have any answers, so the output is "No."
+	 * <li> If {@code answers} is a list of empty maps, then it was the type of query that only wanted a yes/no
+	 *      answer, like {@code siblings(alice,bob)} and the answer is "Yes."
+	 * <li> Otherwise {@code answers} is a list of all bindings that satisfy the query.
+	 * </ul>
+     * @param answers The collection of answers
+     * @return A string representing the answers.
+     */
+    public static String answersToString(Collection<Map<String, String>> answers) {
 
-	/* Only used for unit testing */
-	List<Expr> getEdb() {
-		return edb;
+    	StringBuilder sb = new StringBuilder();
+	    // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
+	    //      produce any results, like a fact or a rule, rather than a query.
+	    // If `answers` is empty, then it was a query that doesn't have any answers, so the output is "No."
+	    // If `answers` is a list of empty maps, then it was the type of query that only wanted a yes/no
+	    //      answer, like `siblings(alice,bob)?` and the answer is "Yes."
+	    // Otherwise `answers` is a list of all bindings that satisfy the query.
+	    if(answers != null) {
+	        if(!answers.isEmpty()){
+	            if(answers.iterator().next().isEmpty()) {
+	            	sb.append("Yes.");
+	            } else {
+	                for(Map<String, String> answer : answers) {
+	                	sb.append(JDatalog.toString(answer));
+	                }
+	            }
+	        } else {
+	        	sb.append("No.");
+	        }
+	    }
+	    return sb.toString();
+    }
+
+    /**
+     * 
+     * @return The {@link EdbProvider}
+     */
+	public EdbProvider getEdbProvider() {
+		return edbProvider;
+	}
+	
+	/**
+	 * 
+	 * @param edbProvider the {@link EdbProvider}
+	 */
+	public void setEdbProvider(EdbProvider edbProvider) {
+		this.edbProvider = edbProvider;
 	}
 
 	/* Only used for unit testing */

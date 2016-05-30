@@ -103,9 +103,9 @@ equals ">=", less than "<" and less or equals "<=".
 ### Notes, Features and Properties
 
 * The engine implements semi-naive bottom-up evaluation.
-* It implements stratified negation, or Stratified Datalog~.
-* It can parse and evaluate Datalog programs from files and Strings (actually anything that implements java.io.Reader).
-* It has a fluent API through which it can be embedded in Java applications to run queries. See the main() method for examples.
+* It implements stratified negation, or _Stratified Datalog&not;_.
+* It can parse and evaluate Datalog programs from files and Strings (actually anything that implements `java.io.Reader`).
+* It has a fluent API through which it can be embedded in Java applications to run queries. See the unit tests for examples.
 * It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
 * It avoids third party dependencies because it is a proof-of-concept. It should be able to stand alone.
 * Values with "quoted strings" are supported.
@@ -193,15 +193,14 @@ TODO: I could've named the program Jatalog. _Catchy!_
 
 ----
 
-It occurred to me that if you *really* want the equivalent of JDBC *prepared statements* then you can pass pass in a `Map<String, String>` containing
-the bound variables. This map will then be sent all the way down to `matchRule()` where it can be passed as the `bindings` parameter in the call
-to `matchGoals()` - so the map will end up at the bottom of the StackMap stack.
-This will allow you to use statements like for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, with `binding = {X : "bar"}`, in the fluent API to perform bulk inserts or queries and so on.
+The purpose of passing a `Map<String, String>` containing the bound variables is for having the equivalent of 
+JDBC *prepared statements*, to allow statements like, for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, 
+with `binding = {X : "bar"}`, in the fluent API to perform bulk inserts or queries and so on.
 
-A problem is that the varargs ... operator must come last in the method declaration, but I can work around this by having a method that only accepts 
-`List<Expr>` as an argument rather than varargs.
+Because the varargs ... operator must come last in the method declaration, I only have the bindings in the method that accepts 
+the `List<Expr>` as an argument.
 
-You can then create a method `prepareStatement()` that can return a `List<Expr>` from a parsed query.
+I now need to create a method `prepareStatement()` that can return a `List<Expr>` from a parsed query.
 
 Actually, the `List<Expr>` should be wrapped in a `JStatement` (or something) interface so that you can run insert rules, insert facts and delete facts through these *prepared statements*.
 
@@ -231,24 +230,20 @@ There are several opportunities to optimize the EDB.
 
 You can trim facts before you start with `expandDatabase()` so that you only evaluate facts that are relevant to your goals.
 So, for example, if your goal is related to "cousins" then you can filter out facts related to "employment".
-Actually, you can filter out the facts in the same way that you filter the rules in `getRelevantRules()`.
+The key is in this line in `query(List<Expr> goals)`:
 
-The EDB can also be hidden behind an `EdbProvider` interface with a method `Collection<Expr> getFacts(String predicate)` - this way 
-users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For example, an EDB that is 
-backed by a database can do a `SELECT * FROM predicate` when necessary. 
+    IndexedSet<Expr,String> facts = new IndexedSet<>(edbProvider.allFacts());
 
-This SQL idea may have a problem because you'll require statements like `query = "SELECT * FROM " + predicate;` to manage it.  
+You'll have to replace it with something that only builds `facts` from facts that are relevant to the current query in the same way 
+that you filter the rules in `getRelevantRules()`. 
 
-You need to retrieve all relevant facts in the `query(List<Expr> goals)`.
+The EDB is now abstracted behind an `EdbProvider` interface, but it will need a method `Collection<Expr> getFacts(String predicate)` 
 
-Such an `EdbProvider` interface will also have to have a `add(Expr e)` method that can insert facts into this back-end, for use by the 
-`JDatalog#execute()` and `JDatalog#fact()` methods.
+It is intended that users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For
+example, an EDB that is backed by a database can do a `SELECT * FROM predicate` when necessary. 
 
-The `JDatalog#validate()` method will need to be modified as well: The `EdbProvider` will have to validate the facts itself because
-facts stored in memory may have to be validated differently from facts backed by a database. My concern is that iterating through all of the
-facts in a database on disk may not scale that well if the number of facts increases. See my comments in the `validate()` method. 
-
-Perhaps the `EdbProvider` interface should extend the `Iterator` interface as well?
+The SQL idea will require statements like `query = "SELECT * FROM " + predicate;` to manage it, so you'd better first verify that 
+the `predicate` is only an alpha-numeric string.
 
 ----
 

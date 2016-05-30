@@ -111,26 +111,7 @@ public class Shell {
                     }
 
                     Collection<Map<String, String>> answers = jDatalog.execute(line);
-
-                    // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
-                    //      produce any results, like a fact or a rule, rather than a query.
-                    // If `answers` is empty, then it was a query that doesn't have any answers, so the output is "No."
-                    // If `answers` is a list of empty maps, then it was the type of query that only wanted a yes/no
-                    //      answer, like `siblings(alice,bob)?` and the answer is "Yes."
-                    // Otherwise `answers` is a list of all bindings that satisfy the query.
-                    if(answers != null) {
-                        if(!answers.isEmpty()){
-                            if(answers.iterator().next().isEmpty()) {
-                                System.out.println("Yes.");
-                            } else {
-                                for(Map<String, String> answer : answers) {
-                                    System.out.println(JDatalog.toString(answer));
-                                }
-                            }
-                        } else {
-                            System.out.println("No.");
-                        }
-                    }
+                    System.out.println(JDatalog.answersToString(answers));                   
 
                 } catch (DatalogException | IOException e) {
                     e.printStackTrace();

@@ -49,6 +49,10 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 		return elements;
 	}
 	
+	public boolean constainsKey(I key) {
+		return index.containsKey(key);
+	}
+	
 	public Collection<I> getIndexes() {
 		return index.keySet();
 	}
