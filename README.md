@@ -218,6 +218,12 @@ I've now gone through the effort of removing the `DatalogException`s from `expan
 implementation. `Expr#evalBuiltIn()` may throw a `RuntimeException` for one of a number of conditions which are supposed to be
 caught earlier, like in `Rule#validate()`.
 
+I can use a method like this to make the type of stream configurable:
+
+    private <T> Stream<T> stream(Collection<T> c) {
+    	return (useParallel)?c.parallelStream():c.stream();
+    }
+
 ----
 
 I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X + Y = Z`, for now:
@@ -226,7 +232,7 @@ I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X +
    variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
 * Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have 
    child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of 
-   `Expr` was a `List<Object>` - see my note above.
+   `Expr` was a `List<Object>` - see my note below.
 
 ----
 
@@ -239,10 +245,4 @@ and starts with an upper-case character, the bindings will become a `Map<String,
 
 It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. 
 I don't intend to implement it at the moment, though.
-
-----
-
-In `expandStrata()`, if `newFacts` is also made an instance of `IndexedSet` then `getDependentRules()` only 
-needs to iterate over the index, rather than over the whole derived database, but the `newFacts.removeAll(facts)` triggers
-a reindex of the IndexSet. I've left some comments in the code that suggests a workaround.
 

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import za.co.wstoop.jdatalog.statement.Statement;
 
@@ -275,7 +276,7 @@ public class JDatalog {
         If for example you're querying employment status, you don't care about family relationships, etc.
         The advantages of this of this optimization becomes bigger the more complex the rules get. */
     private Collection<String> getRelevantPredicates(List<Expr> originalGoals) {
-        Profiler.Timer timer = Profiler.getTimer("getRelevantRules");
+        Profiler.Timer timer = Profiler.getTimer("getRelevantPredicates");
         try {
             Collection<String> relevant = new HashSet<>();
             LinkedList<Expr> goals = new LinkedList<>(originalGoals);
@@ -328,12 +329,15 @@ public class JDatalog {
      * take a look at which rules have those facts in their bodies and may cause new facts 
      * to be derived during the next iteration. 
      * The `dependents` parameter was built earlier in the buildDependentRules() method */
-    private Collection<Rule> getDependentRules(Collection<Expr> facts, Map<String, Collection<Rule>> dependents) {
+    private Collection<Rule> getDependentRules(IndexedSet<Expr,String> facts, Map<String, Collection<Rule>> dependents) {
         Profiler.Timer timer = Profiler.getTimer("getDependentRules");
         try {
+        	
+ //       	return facts.getIndexes().stream().flatMap(pred -> dependents.get(pred)!=null?dependents.get(pred).stream():Stream.empty()).filter(rules -> rules != null).collect(Collectors.toSet());
+        	
             Set<Rule> dependantRules = new HashSet<>();
-            for(Expr fact : facts) {
-                Collection<Rule> rules = dependents.get(fact.predicate);
+            for(String predicate : facts.getIndexes()) {
+                Collection<Rule> rules = dependents.get(predicate);
                 if(rules != null) {
                     dependantRules.addAll(rules);
                 }
@@ -451,26 +455,15 @@ public class JDatalog {
                 Profiler.Timer loopTimer = Profiler.getTimer("loopTimer");
                 try {
                     // Match each rule to the facts
-                    Set<Expr> newFacts = new HashSet<>();
+                	IndexedSet<Expr,String> newFacts = new IndexedSet<>();
                     for(Rule rule : rules) {
                         newFacts.addAll(matchRule(facts, rule));
                     }
-
-                    // The new facts that have been added in this iteration for semi-naive evaluation.
-                    newFacts.removeAll(facts);
 
                     // Repeat until there are no more facts added
                     if(newFacts.isEmpty()) {
                         return facts;
                     }
-
-                    // if `newFacts` is also made an instance of `IndexedSet` then 
-                    // `getDependentRules()` only needs to iterate over the index, rather 
-                    // than over the whole derived database. The problem is that the removeAll(facts)
-                    // triggers a reindex(), which renders the optimization moot.
-                    // TODO: I might get around this by revisiting the results.add(rule.head.substitute(answer)); 
-                    // in matchRule(): only add the derived fact to results if the fact is not already in facts.
-                    // That way, you can get rid of the removeAll() entirely.
 
                     // Determine which rules depend on the newly derived facts
                     rules = getDependentRules(newFacts, dependentRules);
@@ -495,12 +488,10 @@ public class JDatalog {
             // Match the rule body to the facts.
             Collection<Map<String, String>> answers = matchGoals(rule.body, facts, null);
 
-            // For each match found, substitute the bindings into the head to create a new fact.
-            Set<Expr> results = new HashSet<>();
-            for(Map<String, String> answer : answers) {
-                results.add(rule.head.substitute(answer));
-            }
-            return results;
+            return answers.stream().map(answer -> rule.head.substitute(answer))
+            		.filter(derivedFact -> !facts.contains(derivedFact))
+            		.collect(Collectors.toSet());
+            
         } finally {
             timer.stop();
         }

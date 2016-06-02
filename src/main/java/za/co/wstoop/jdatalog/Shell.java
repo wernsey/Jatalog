@@ -25,7 +25,7 @@ public class Shell {
     // TODO: The benchmarking is obsolete. Remove it.
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
-    static final int NUM_RUNS = 20000;
+    static final int NUM_RUNS = 1000;
 
     private static final Pattern loadPattern = Pattern.compile("^(?i:load)\\s+(\\S+)\\s*$");
 
@@ -65,6 +65,7 @@ public class Shell {
                             try (Reader reader = new BufferedReader(new FileReader(arg))) {
                                 jDatalog.executeAll(reader, qo);
                             }
+                            System.gc();System.runFinalization();
                         }
                     }
 
