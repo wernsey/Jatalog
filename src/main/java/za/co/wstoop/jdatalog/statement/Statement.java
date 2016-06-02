@@ -40,7 +40,7 @@ public interface Statement {
 	 * JDatalog provides a {@link OutputUtils#answersToString(Collection)} method that can convert answers to 
 	 * Strings
 	 * @throws DatalogException if an error occurs in processing the statement
-	 * @see JDatalog#answersToString(Collection)
+	 * @see OutputUtils#answersToString(Collection)
 	 */
 	public Collection<Map<String, String>> execute(JDatalog datalog, Map<String, String> bindings) throws DatalogException;
 	

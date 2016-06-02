@@ -15,8 +15,8 @@ import za.co.wstoop.jdatalog.statement.Statement;
  * Otherwise, if you set the QueryOutput parameter to {@code null}, {@link JDatalog#executeAll(Reader, QueryOutput)}
  * will just return the answers from the last query.
  * </p>
- * @see JDatalog#toString(Collection)
- * @see JDatalog#toString(Map)
+ * @see OutputUtils#answersToString(Collection)
+ * @see OutputUtils#bindingsToString(Map)
  */
 public interface QueryOutput {
     /**

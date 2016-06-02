@@ -12,7 +12,6 @@ import za.co.wstoop.jdatalog.Rule;
  * <p>
  * {@link JDatalog#prepareStatement(String)} can be used to parse
  * Strings to statement object.
- * </p><p>
  * </p>
  * @see Statement
  * @see Statement#execute(JDatalog, java.util.Map)

@@ -212,7 +212,7 @@ public class JDatalog {
      * @param goals The list of goals of the query.
      * @param bindings An optional (nullable) mapping of variable names to values. 
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
-     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
+     * 	See {@link OutputUtils#answersToString(Collection)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
 	public Collection<Map<String, String>> query(List<Expr> goals, Map<String, String> bindings)
@@ -251,7 +251,7 @@ public class JDatalog {
 	 * Executes a query with the specified goals against the database.
      * @param goals The list of goals of the query.
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
-     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
+     * 	See {@link OutputUtils#answersToString(Collection)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
 	 */
 	public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
