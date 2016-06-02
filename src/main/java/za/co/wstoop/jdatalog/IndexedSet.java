@@ -38,14 +38,6 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	}
 	
 	/**
-	 * Returns all the indexes in the set
-	 * @return The indexes
-	 */
-	public Collection<I> getIndexes() {
-		return index.keySet();
-	}
-	
-	/**
 	 * Retrieves the subset of the elements in the set with the 
 	 * specified index.
 	 * @param key The indexed element
@@ -55,6 +47,10 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 		Set<E> elements = index.get(key);
 		if(elements == null) return Collections.emptySet();
 		return elements;
+	}
+
+	public Collection<I> getIndexes() {
+		return index.keySet();
 	}
 	
 	private void reindex() {
@@ -161,6 +157,5 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	@Override
 	public <A> A[] toArray(A[] a) {
 		return contents.toArray(a);
-	}
-	
+	}	
 }

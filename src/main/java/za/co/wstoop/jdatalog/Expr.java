@@ -133,7 +133,7 @@ public class Expr implements Indexable<String> {
      * @param bindings The bindings to substitute.
      * @return A new expression with the variables replaced with the values in bindings.
      */
-    Expr substitute(Map<String, String> bindings) {
+    public Expr substitute(Map<String, String> bindings) {
         // that.terms.add() below doesn't work without the new ArrayList()
         Expr that = new Expr(this.predicate, new ArrayList<>());
         that.negated = negated;

@@ -44,7 +44,7 @@ public class Shell {
                         JDatalog jDatalog = new JDatalog();
                         for(String arg : args) {
                             try( Reader reader = new BufferedReader(new FileReader(arg)) ) {
-                                jDatalog.execute(reader, null);
+                                jDatalog.executeAll(reader, null);
                             }
                         }
                     }
@@ -59,12 +59,12 @@ public class Shell {
 
                         for (String arg : args) {
                             try (Reader reader = new BufferedReader(new FileReader(arg))) {
-                                jDatalog.execute(reader, qo);
+                                jDatalog.executeAll(reader, qo);
                             }
                         }
                     }
 
-                    System.out.println("Profile for running " + JDatalog.toString(Arrays.asList(args)) + "; NUM_RUNS=" + NUM_RUNS);
+                    System.out.println("Profile for running " + OutputUtils.listToString(Arrays.asList(args)) + "; NUM_RUNS=" + NUM_RUNS);
                     Profiler.keySet().stream().sorted().forEach(key -> {
                         double time = Profiler.average(key);
                         double total = Profiler.total(key);
@@ -76,7 +76,7 @@ public class Shell {
                     QueryOutput qo = new DefaultQueryOutput();
                     for (String arg : args) {
                         try (Reader reader = new BufferedReader(new FileReader(arg))) {
-                            jDatalog.execute(reader, qo);
+                            jDatalog.executeAll(reader, qo);
                         }
                     }
                 }
@@ -110,8 +110,8 @@ public class Shell {
                         continue;
                     }
 
-                    Collection<Map<String, String>> answers = jDatalog.execute(line);
-                    System.out.println(JDatalog.answersToString(answers));                   
+                    Collection<Map<String, String>> answers = jDatalog.executeAll(line);
+                    System.out.println(OutputUtils.answersToString(answers));                   
 
                 } catch (DatalogException | IOException e) {
                     e.printStackTrace();

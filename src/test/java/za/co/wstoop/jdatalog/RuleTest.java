@@ -3,6 +3,9 @@ package za.co.wstoop.jdatalog;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 
 public class RuleTest {
@@ -130,5 +133,20 @@ public class RuleTest {
 	public void testToString() throws DatalogException {
 		Rule rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B"));
 		assertTrue(rule.toString().equals("p(A, B) :- q(A), q(B), A <> B"));
+	}
+	
+	
+	@Test
+	public void testSubstitute() throws DatalogException {
+		Rule rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B"));
+		
+		Map<String, String> bindings = new HashMap<>();
+		bindings.put("A", "aa");
+		Rule subsRule = rule.substitute(bindings);
+		System.out.println(subsRule);
+		assertTrue(subsRule.equals(new Rule(new Expr("p", "aa", "B"), new Expr("q", "aa"), new Expr("q", "B"), new Expr("<>", "aa", "B"))));
+		
+		// Original rule unchanged?
+		assertTrue(rule.equals(new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B")))); 
 	}
 }

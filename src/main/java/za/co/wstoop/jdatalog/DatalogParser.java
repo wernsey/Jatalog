@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
+
+import za.co.wstoop.jdatalog.statement.Statement;
+import za.co.wstoop.jdatalog.statement.StatementFactory;
 
 /**
  * Internal class that encapsulates the parser for the Datalog language.
@@ -22,7 +23,10 @@ class DatalogParser {
      * - a query, like ancestor(X, bob)?
      * - a delete clause, like delete parent(alice, bob).
      */
-    static Collection<Map<String, String>> parseStmt(JDatalog jDatalog, StreamTokenizer scan, List<Expr> goals) throws DatalogException {
+    static Statement parseStmt(StreamTokenizer scan) throws DatalogException {
+    	
+    	List<Expr> goals = new ArrayList<>();
+    	
         Profiler.Timer timer = Profiler.getTimer("parseStmt");
         try {
 
@@ -38,8 +42,7 @@ class DatalogParser {
                 if(scan.ttype != '.') {
                     throw new DatalogException("[line " + scan.lineno() + "] Expected '.' after 'delete'");
                 }
-                jDatalog.delete(goals);
-                return null;
+                return StatementFactory.deleteFact(goals);
             } else {
                 scan.pushBack();
             }
@@ -59,21 +62,13 @@ class DatalogParser {
                 if(scan.ttype != '.') {
                     throw new DatalogException("[line " + scan.lineno() + "] Expected '.' after rule");
                 }
-                try {
                     Rule newRule = new Rule(head, body);
-                    jDatalog.rule(newRule);
-                } catch (DatalogException de) {
-                    throw new DatalogException("[line " + scan.lineno() + "] Rule is invalid", de);
-                }
+				return StatementFactory.insertRule(newRule);
             } else {
                 // We're dealing with a fact, or a query
                 if(scan.ttype == '.') {
                     // It's a fact
-                    try {
-                    	jDatalog.fact(head);
-                    } catch (DatalogException de) {
-                        throw new DatalogException("[line " + scan.lineno() + "] Fact is invalid", de);
-                    }
+                    return StatementFactory.insertFact(head);
                 } else {
                     // It's a query
                     goals.clear();
@@ -89,13 +84,7 @@ class DatalogParser {
                     }
 
                     if(scan.ttype == '?') {
-                        try {
-                            return jDatalog.query(goals);
-                        } catch (DatalogException e) {
-                            // Attach the line number to any exceptions thrown; the small drawback is that you lose
-                            // the original stacktrace, but the line number is more important for users.
-                            throw new DatalogException("[line " + scan.lineno() + "] " + e.getMessage());
-                        }
+						return StatementFactory.query(goals);
                     } else {
                         throw new DatalogException("[line " + scan.lineno() + "] Expected '?' after query");
                     }
@@ -106,11 +95,10 @@ class DatalogParser {
         } finally {
             timer.stop();
         }
-        return null;
     }
 
     /* parses an expression */
-    private static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
+    static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("parseExpr");
         try {
             scan.nextToken();

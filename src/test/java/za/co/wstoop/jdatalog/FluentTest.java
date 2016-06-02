@@ -4,10 +4,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+
+import za.co.wstoop.jdatalog.statement.Statement;
 
 // TODO: Code coverage could be better... 
 public class FluentTest {
@@ -76,41 +77,28 @@ public class FluentTest {
 	}
 
 	@Test
-	public void testExecute() throws Exception {
-		// The JDatalog.execute(String) method runs queries directly.
-		try {
-
-			JDatalog jDatalog = new JDatalog();
-			
-			// Insert some facts
-			jDatalog.execute("foo(bar). foo(baz).");			
-			
-			// Run a query:
-			Collection<Map<String, String>> answers = jDatalog.execute("foo(What)?");
-
-			assertTrue(TestUtils.answerContains(answers, "What", "baz", "What", "bar"));
-			assertFalse(TestUtils.answerContains(answers, "What", "fred"));
-		} catch (DatalogException e) {
-			e.printStackTrace();
-		}
-    }
-	
-
-	@Test
 	public void testBindings() throws Exception {
-		// This is how you would use the fluent API:
+		// This is how you would use the fluent API with variable bindings:
+		// They are inspired by JDBC prepared statements
 		try {
 			JDatalog jDatalog = createDatabase();
 			jDatalog.validate();
 			
-			Map<String, String> bindings = new HashMap<>();
-			bindings.put("A", "aaa");
+			Statement statement = JDatalog.prepareStatement("sibling(A, B)?");
+			
+			//assertTrue(statement instanceof QueryStatement); // ugh - package private :(
+			//assertTrue(goals.size() == 1);
+			//assertTrue(goals.contains(new Expr("sibling", "A", "B")));
+			// TODO: Unit test of goal with more than one Expr, perhaps "sibling(A,B), A <> aaa"
+			
+			Map<String, String> bindings = JDatalog.makeBindings("A", "aaa", "X", "xxx");
 						
-			// Run a query "who are siblings?"; print the answers
+			// Run a query "who are siblings (of `aaa`)?"; print the answers
 			Collection<Map<String, String>> answers;
-            answers = jDatalog.query(Expr.expr("sibling", "A", "B"), bindings);
+            answers = statement.execute(jDatalog, bindings);
+			assertTrue(answers != null);
             
-            // Siblings are aaa-aab and aa-ab as well as the reverse
+            // Only aab is a sibling of aaa
             assertFalse(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
             assertFalse(TestUtils.answerContains(answers, "A", "ab", "B", "aa"));
@@ -120,6 +108,26 @@ public class FluentTest {
 			e.printStackTrace();
 		}
 	}
+
+	@Test
+	public void testExecute() throws Exception {
+		// The JDatalog.executeAll(String) method runs queries directly.
+		try {
+
+			JDatalog jDatalog = new JDatalog();
+			
+			// Insert some facts
+			jDatalog.executeAll("foo(bar). foo(baz).");			
+			
+			// Run a query:
+			Collection<Map<String, String>> answers = jDatalog.executeAll("foo(What)?");
+			assertTrue(answers != null);
+			assertTrue(TestUtils.answerContains(answers, "What", "baz", "What", "bar"));
+			assertFalse(TestUtils.answerContains(answers, "What", "fred"));
+		} catch (DatalogException e) {
+			e.printStackTrace();
+		}
+    }
 		
 	@Test
 	public void testDemo() throws Exception {

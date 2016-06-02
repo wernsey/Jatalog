@@ -6,6 +6,9 @@ import java.util.Collection;
  * The EdbProvider allows the EDB from JDatalog's perspective to be abstracted away from the actual
  * storage mechanism.
  * <p>
+ * The purpose is to allow different sources for the EDB data, such as CSV or XML files or even a SQL 
+ * or NoSQL database.
+ * </p><p>
  * JDatalog uses a {@link BasicEdbProvider} by default, which simply stores facts in memory, but it 
  * can be changed through the {@link JDatalog#setEdbProvider(EdbProvider)} method. 
  * </p> 

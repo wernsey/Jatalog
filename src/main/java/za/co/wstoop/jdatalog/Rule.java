@@ -1,8 +1,10 @@
 package za.co.wstoop.jdatalog;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -116,5 +118,41 @@ public class Rule {
 				sb.append(", ");
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * Creates a new Rule with all variables from bindings substituted.
+	 * eg. a Rule {@code p(X,Y) :- q(X),q(Y),r(X,Y)} with bindings {X:aa}
+	 * will result in a new Rule {@code p(aa,Y) :- q(aa),q(Y),r(aa,Y)}
+	 * @param bindings The bindings to substitute.
+	 * @return the Rule with the substituted bindings. 
+	 */
+	// TODO: Unit test Rule#substitute()
+	public Rule substitute(Map<String, String> bindings) {
+		List<Expr> subsBody = new ArrayList<>();
+		for(Expr e : body) {
+			subsBody.add(e.substitute(bindings));
+		}
+		return new Rule(this.head.substitute(bindings), subsBody);
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other == null || !(other instanceof Rule)) {
+			return false;
+		}
+		Rule that = ((Rule) other);
+		if (!this.head.equals(that.head)) {
+			return false;
+		}
+		if (this.body.size() != that.body.size()) {
+			return false;
+		}
+		for (Expr e : this.body) {
+			if (!that.body.contains(e)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

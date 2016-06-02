@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import za.co.wstoop.jdatalog.statement.Statement;
+
 /**
  * Main entry-point for the JDatalog engine.
  * <p>
@@ -35,12 +37,12 @@ import java.util.stream.Collectors;
  * </ul>
  * <h3>The Parser</h3>
  * <p>
- * {@link #execute(Reader, QueryOutput)} uses a {@link java.io.Reader} to read a series of Datalog statements from a file or a String
+ * {@link #executeAll(Reader, QueryOutput)} uses a {@link java.io.Reader} to read a series of Datalog statements from a file or a String
  * and executes them.
  * </p><p> 
  * Statements can insert facts or rules in the database or execute queries against the database.
  * </p><p>
- * {@link #execute(String)} is a shorthand wrapper that can be used with the fluent API.
+ * {@link #executeAll(String)} is a shorthand wrapper that can be used with the fluent API.
  * </p>
  * <h3>The Evaluation Engine</h3>
  * JDatalog's evaluation engine is bottom-up, semi-naive with stratified negation.
@@ -94,6 +96,32 @@ public class JDatalog {
     static boolean isVariable(String term) {
         return Character.isUpperCase(term.charAt(0));
     }
+    
+    /* Specific tokenizer for our syntax */
+	private static StreamTokenizer getTokenizer(Reader reader) throws IOException {
+		StreamTokenizer scan = new StreamTokenizer(reader);
+		scan.ordinaryChar('.'); // '.' looks like a number to StreamTokenizer by default
+		scan.commentChar('%'); // Prolog-style % comments; slashSlashComments and slashStarComments can stay as well.
+		scan.quoteChar('"');
+		scan.quoteChar('\'');
+		// WTF? You can't disable parsing of numbers unless you reset the syntax (http://stackoverflow.com/q/8856750/115589)
+		//scan.parseNumbers(); 
+		return scan;
+	}
+    
+	/* Internal method for executing one and only one statement */
+    private Collection<Map<String, String>> executeSingleStatement(StreamTokenizer scan, Reader reader, QueryOutput output) throws DatalogException {
+    	Statement statement = DatalogParser.parseStmt(scan);
+		try {
+			Collection<Map<String, String>> answers = statement.execute(this);
+			if (answers != null && output != null) {
+				output.writeResult(statement, answers);
+			}
+			return answers;
+		} catch (DatalogException e) {
+			throw new DatalogException("[line " + scan.lineno() + "] Error executing statement", e);
+		}
+    }
 
     /**
      * Executes all the statements in a file/string or another object wrapped by a {@link java.io.Reader}.
@@ -116,31 +144,19 @@ public class JDatalog {
      * @throws DatalogException on syntax and I/O errors encountered while executing. 
      * @see QueryOutput
      */
-    public Collection<Map<String, String>> execute(Reader reader, QueryOutput output) throws DatalogException {
+    public Collection<Map<String, String>> executeAll(Reader reader, QueryOutput output) throws DatalogException {
         Profiler.Timer timer = Profiler.getTimer("execute");
         try {
-            StreamTokenizer scan = new StreamTokenizer(reader);
-            scan.ordinaryChar('.'); // '.' looks like a number to StreamTokenizer by default
-            scan.commentChar('%'); // Prolog-style % comments; slashSlashComments and slashStarComments can stay as well.
-            scan.quoteChar('"');
-            scan.quoteChar('\'');
-            //scan.parseNumbers(); // WTF? You can't disable parsing of numbers unless you reset the syntax (http://stackoverflow.com/q/8856750/115589)
-            scan.nextToken();
-
+            StreamTokenizer scan = getTokenizer(reader);
+            
             // Tracks the last query's answers
             Collection<Map<String, String>> answers = null;
-
-            // Tracks the last query's goals (for output purposes)
-            List<Expr> goals = new ArrayList<>();
-            
+            scan.nextToken();
             while(scan.ttype != StreamTokenizer.TT_EOF) {
                 scan.pushBack();
-                answers = DatalogParser.parseStmt(this, scan, goals);
-                if(answers != null && output != null) {
-                    output.writeResult(goals, answers);
-                }
+                answers = executeSingleStatement(scan, reader, output);
                 scan.nextToken();
-            }
+            }            
             return answers;
         } catch (IOException e) {
             throw new DatalogException(e);
@@ -150,18 +166,18 @@ public class JDatalog {
     }
 
     /**
-     * Executes a Datalog statement.
-     * @param statement the statement to execute as a string
+     * Executes the Datalog statements in a string.
+     * @param statements the statements to execute as a string.
      * @return The answer of the string, as a Collection of variable mappings.
-     * 	See {@link #execute(Reader, QueryOutput)} for details on how to interpret the result.
+     * 	See {@link #executeAll(Reader, QueryOutput)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
-    public Collection<Map<String, String>> execute(String statement) throws DatalogException {
+    public Collection<Map<String, String>> executeAll(String statements) throws DatalogException {
         // It would've been fun to wrap the results in a java.sql.ResultSet, but damn,
         // those are a lot of methods to implement:
         // https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html
-        StringReader reader = new StringReader(statement);
-        return execute(reader, null);
+        StringReader reader = new StringReader(statements);
+        return executeAll(reader, null);
     }
     
     /* Reorganize the goals in a query so that negated literals are at the end.
@@ -231,18 +247,6 @@ public class JDatalog {
 	}
 
 	/**
-	 * Executes a query with a single goal against the database.
-     * @param goal The goal of the query.
-     * @param bindings An optional (nullable) mapping of variable names to values. 
-     * @return The answer of the last statement in the file, as a Collection of variable mappings.
-     * 	See {@link #answersToString(Collection)} for details on how to interpret the result.
-     * @throws DatalogException on syntax errors encountered while executing. 
-	 */
-	public Collection<Map<String, String>> query(Expr goal, Map<String, String> bindings) throws DatalogException {
-		return query(Collections.singletonList(goal), bindings);
-	}
-
-	/**
 	 * Executes a query with the specified goals against the database.
      * @param goals The list of goals of the query.
      * @return The answer of the last statement in the file, as a Collection of variable mappings.
@@ -258,7 +262,7 @@ public class JDatalog {
 	 * part of the fluent API. 
 	 * @param goals The goals of the query.
 	 * @return The answer of the last statement in the file, as a Collection of
-	 *         variable mappings. See {@link #execute(Reader, QueryOutput)} for
+	 *         variable mappings. See {@link #executeAll(Reader, QueryOutput)} for
 	 *         details on how to interpret the result.
 	 * @throws DatalogException
 	 *             on syntax errors encountered while executing.
@@ -279,12 +283,12 @@ public class JDatalog {
                 Expr expr = goals.poll();
 				if (!relevant.contains(expr.predicate)) {
 					relevant.add(expr.predicate);
-                for(Rule rule : idb) {
+					for (Rule rule : idb) {
 						if (rule.head.predicate.equals(expr.predicate)) {
-                        goals.addAll(rule.body);
-                    }
-                }
-            }
+							goals.addAll(rule.body);
+						}
+					}
+				}
             }
             return relevant;
         } finally {
@@ -572,9 +576,9 @@ public class JDatalog {
         // Different EdbProvider implementations may have different ideas about how 
         // to iterate through the EDB in the most efficient manner. so in the future
         // it may be better to have the edbProvider validate the facts itself.
-        for(Expr fact : edbProvider.allFacts()) {
+        for (Expr fact : edbProvider.allFacts()) {
 			fact.validFact();
-        }
+		}
     }
 
     // Methods for the fluent interface
@@ -679,9 +683,59 @@ public class JDatalog {
     public boolean delete(List<Expr> goals) throws DatalogException {
     	return delete(goals, null);
     }
+    
+	/**
+	 * Parses a string into a statement that can be executed against the database.
+	 * @param statement The string of the statement to parse.
+	 * <ul>
+	 *  <li>Statements ending with '.'s will insert either rules or facts.
+	 *  <li>Statements ending with '?' are queries.
+	 *  <li> FIXME: Statements ending with '~' are delete statements.
+	 * </ul>
+	 * @return A Statement object whose {@link Statement#execute(JDatalog) execute} method 
+	 * 	can be called against the database at a later stage.
+	 * @throws DatalogException on error, such as inserting invalid facts or rules or 
+	 * 	running invalid queries.
+	 * @see Statement
+	 */
+    public static Statement prepareStatement(String statement) throws DatalogException {
+		try {
+        	StringReader reader = new StringReader(statement);
+            StreamTokenizer scan = getTokenizer(reader);
+            return DatalogParser.parseStmt(scan);
+        } catch (IOException e) {
+            throw new DatalogException(e);
+        }
+    }
 
+    /**
+     * Helper method to create bindings for {@link Statement#execute(JDatalog, Map)} method.
+     * <p>
+     * For example, call it like {@code JDatalog.makeBindings("A", "aaa", "Z", "zzz")} to create a
+     * mapping where A maps to the value "aaa" and Z maps to "zzz": {@code <A = "aaa"; Z = "zzz">}.
+     * </p>
+     * @param kvPairs A list of key-value pairs - there must be an even value of arguments.
+     * @return A Map containing the string values of the key-value pairs.
+     * @throws DatalogException on error
+     * @see Statement#execute(JDatalog, Map)
+     */
+	public static Map<String, String> makeBindings(Object... kvPairs) throws DatalogException {
+		Map<String, String> mapping = new HashMap<String, String>();
+		if (kvPairs.length % 2 != 0) {
+			throw new DatalogException("kvPairs must be even");
+		}
+		for (int i = 0; i < kvPairs.length / 2; i++) {
+			String k = kvPairs[i * 2].toString();
+			String v = kvPairs[i * 2 + 1].toString();
+			mapping.put(k, v);
+		}
+		return mapping;
+	}
+        
     @Override
 	public String toString() {
+    	// TODO: Unit tests for toString() 
+    	// The output of this method should be parseable again and produce an exact replica of the database
         StringBuilder sb = new StringBuilder("% Facts:");
         for(Expr fact : edbProvider.allFacts()) {
             sb.append(fact).append(".\n");
@@ -692,83 +746,9 @@ public class JDatalog {
         }
         return sb.toString();
     }
-    
-    /**
-     * Formats a collection of JDatalog entities, like {@link Expr}s and {@link Rule}s 
-     * @param collection the collection to convert to a string
-     * @return A String representation of the collection.
-     */
-    public static String toString(Collection<?> collection) {
-        StringBuilder sb = new StringBuilder("[");
-        for(Object o : collection)
-            sb.append(o.toString()).append(". ");
-        sb.append("]");
-        return sb.toString();
-    }
 
     /**
-     * Formats a Map of variable bindings to a String for output
-     * @param bindings the bindings to convert to a String
-     * @return A string representing the variable bindings
-     */
-    public static String toString(Map<String, String> bindings) {
-        StringBuilder sb = new StringBuilder("{");
-        int s = bindings.size(), i = 0;
-        for(String k : bindings.keySet()) {
-            String v = bindings.get(k);
-            sb.append(k).append(": ");
-            if(v.startsWith("\"")) {
-                // Needs more org.apache.commons.lang3.StringEscapeUtils#escapeJava(String)
-                sb.append('"').append(v.substring(1).replaceAll("\"", "\\\\\"")).append("\"");
-            } else {
-                sb.append(v);
-            }
-            if(++i < s) sb.append(", ");
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-    
-    /**
-     * Helper method to convert a collection of answers to a String.
-     * <ul>
-	 * <li> If {@code answers} is null, the line passed to {@code jDatalog.query(line)} was a statement that didn't
-	 *      produce any results, like a fact or a rule, rather than a query.
-	 * <li> If {@code answers} is empty, then it was a query that doesn't have any answers, so the output is "No."
-	 * <li> If {@code answers} is a list of empty maps, then it was the type of query that only wanted a yes/no
-	 *      answer, like {@code siblings(alice,bob)} and the answer is "Yes."
-	 * <li> Otherwise {@code answers} is a list of all bindings that satisfy the query.
-	 * </ul>
-     * @param answers The collection of answers
-     * @return A string representing the answers.
-     */
-    public static String answersToString(Collection<Map<String, String>> answers) {
-
-    	StringBuilder sb = new StringBuilder();
-	    // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
-	    //      produce any results, like a fact or a rule, rather than a query.
-	    // If `answers` is empty, then it was a query that doesn't have any answers, so the output is "No."
-	    // If `answers` is a list of empty maps, then it was the type of query that only wanted a yes/no
-	    //      answer, like `siblings(alice,bob)?` and the answer is "Yes."
-	    // Otherwise `answers` is a list of all bindings that satisfy the query.
-	    if(answers != null) {
-	        if(!answers.isEmpty()){
-	            if(answers.iterator().next().isEmpty()) {
-	            	sb.append("Yes.");
-	            } else {
-	                for(Map<String, String> answer : answers) {
-	                	sb.append(JDatalog.toString(answer)).append("\n");
-	                }
-	            }
-	        } else {
-	        	sb.append("No.");
-	        }
-	    }
-	    return sb.toString();
-    }
-
-    /**
-     * 
+     * Retrieves the EdbProvider
      * @return The {@link EdbProvider}
      */
 	public EdbProvider getEdbProvider() {
@@ -776,7 +756,7 @@ public class JDatalog {
 	}
 	
 	/**
-	 * 
+	 * Sets the EdbProvider that manages the database.
 	 * @param edbProvider the {@link EdbProvider}
 	 */
 	public void setEdbProvider(EdbProvider edbProvider) {
@@ -786,5 +766,5 @@ public class JDatalog {
 	/* Only used for unit testing */
 	Collection<Rule> getIdb() {
 		return idb;
-	}	
+	}
 }

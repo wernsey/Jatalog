@@ -193,19 +193,6 @@ TODO: I could've named the program Jatalog. _Catchy!_
 
 ----
 
-The purpose of passing a `Map<String, String>` containing the bound variables is for having the equivalent of 
-JDBC *prepared statements*, to allow statements like, for example `jDatalog.query(new Expr("foo","X", "Y"), binding)`, 
-with `binding = {X : "bar"}`, in the fluent API to perform bulk inserts or queries and so on.
-
-Because the varargs ... operator must come last in the method declaration, I only have the bindings in the method that accepts 
-the `List<Expr>` as an argument.
-
-I now need to create a method `prepareStatement()` that can return a `List<Expr>` from a parsed query.
-
-Actually, the `List<Expr>` should be wrapped in a `JStatement` (or something) interface so that you can run insert rules, insert facts and delete facts through these *prepared statements*.
-
-----
-
 There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to 
 `expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular).
 
@@ -221,21 +208,30 @@ The Racket language has a Datalog module as part of its library [rack]. I've loo
 
 I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X + Y = Z`, for now:
 
-* Arithmetic predicates aren't that simple. They should be evaluated as soon as the input variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
-* Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of `Expr` was a `List<Object>` - see my note above.
+* Arithmetic predicates aren't that simple. They should be evaluated as soon as the input 
+   variables (X and Y) in this case becomes available, so that Z can be computed and bound for the remaining goals.
+* Arithmetic expressions would require a more complex parser and there would be a need for `Expr` to have 
+   child `Expr` objects to build a parse tree. The parse tree would be simpler if the `terms` of 
+   `Expr` was a `List<Object>` - see my note above.
 
 ----
 
-The purpose of the `EdbProvider` interface to allow different sources for the EDB data, such as CSV or XML files or even
-a SQL database. For example, an EDB that is backed by a database can do a `SELECT * FROM predicate` when necessary. 
+It is conceptually possible to make the `List<String> terms` of `Expr` a `List<Object>` instead, so that 
+you can store complex Java objects in the database (as POJOs). 
 
-The SQL idea will require statements like `query = "SELECT * FROM " + predicate;` to manage it, so you'd better first verify that 
-the `predicate` is only an alpha-numeric string.
+The `isVariable()` method will just have to be modified to check whether its parameter is `instanceof` String 
+and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of 
+`query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
+
+It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. 
+I don't intend to implement it at the moment, though.
 
 ----
 
-It is conceptually possible to make the `List<String> terms` of `Expr` a `List<Object>` instead, so that you can store complex Java objects in the database (as POJOs). 
+In `expandStrata()`, if `newFacts` is also made an instance of `IndexedSet` then `getDependentRules()` only 
+needs to iterate over the index, rather than over the whole derived database. There may be a performance hit to the IndexedSet, 
+so measure whether it actually improves anything before committing to the idea.
 
-The `isVariable()` method will just have to be modified to check whether its parameter is `instanceof` String and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
+----
 
-It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. I don't intend to implement it at the moment, though.
+The `DatalogParser` class can be simply renamed to `Parser` - no need to prefix it...
