@@ -111,7 +111,7 @@ public class JDatalog {
     
 	/* Internal method for executing one and only one statement */
     private Collection<Map<String, String>> executeSingleStatement(StreamTokenizer scan, Reader reader, QueryOutput output) throws DatalogException {
-    	Statement statement = DatalogParser.parseStmt(scan);
+    	Statement statement = Parser.parseStmt(scan);
 		try {
 			Collection<Map<String, String>> answers = statement.execute(this);
 			if (answers != null && output != null) {
@@ -464,6 +464,14 @@ public class JDatalog {
                         return facts;
                     }
 
+                    // if `newFacts` is also made an instance of `IndexedSet` then 
+                    // `getDependentRules()` only needs to iterate over the index, rather 
+                    // than over the whole derived database. The problem is that the removeAll(facts)
+                    // triggers a reindex(), which renders the optimization moot.
+                    // TODO: I might get around this by revisiting the results.add(rule.head.substitute(answer)); 
+                    // in matchRule(): only add the derived fact to results if the fact is not already in facts.
+                    // That way, you can get rid of the removeAll() entirely.
+
                     // Determine which rules depend on the newly derived facts
                     rules = getDependentRules(newFacts, dependentRules);
 
@@ -702,7 +710,7 @@ public class JDatalog {
 		try {
         	StringReader reader = new StringReader(statement);
             StreamTokenizer scan = getTokenizer(reader);
-            return DatalogParser.parseStmt(scan);
+            return Parser.parseStmt(scan);
         } catch (IOException e) {
             throw new DatalogException(e);
         }
@@ -736,11 +744,11 @@ public class JDatalog {
 	public String toString() {
     	// TODO: Unit tests for toString() 
     	// The output of this method should be parseable again and produce an exact replica of the database
-        StringBuilder sb = new StringBuilder("% Facts:");
+        StringBuilder sb = new StringBuilder("% Facts:\n");
         for(Expr fact : edbProvider.allFacts()) {
             sb.append(fact).append(".\n");
         }
-        sb.append("\n% Rules:");
+        sb.append("\n% Rules:\n");
         for(Rule rule : idb) {
             sb.append(rule).append(".\n");
         }

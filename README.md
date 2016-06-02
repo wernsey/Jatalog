@@ -76,6 +76,17 @@ The queries can then then be executed as follows:
     Collection<Map<String, String>> answers;
     answers = jDatalog.query(Expr.expr("ancestor", "X", "carol"));
 
+In addition, there is also a `JDatalog.prepareStatement()` method that will parse strings into `Statement` objects
+which can then be used to do batch inserts or queries, for example: 
+
+    Statement statement = JDatalog.prepareStatement("sibling(Me, You)?");
+    Map<String, String> bindings = JDatalog.makeBindings("Me", "bob");
+    Collection<Map<String, String>> answers;
+    answers = statement.execute(jDatalog, bindings);
+    
+In the above example, the variable `Me` is bound to the value `bob`, so the `statement.execute()` line is equivalent to
+executing the query `sibling(bob, You)?`
+
 The Javadoc documentation contains more information and the unit tests contain some more examples.
 
 ### Implementation
@@ -100,6 +111,12 @@ Stratification also puts additional constraints on the usage of negated expressi
 In addition JDatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
 equals ">=", less than "<" and less or equals "<=".
 
+JDatalog has the `query~` for retracting facts form the database. For example, `planet(pluto)~` will retract the 
+fact that `pluto` is a `planet`. 
+The query can contain variables and multiple clauses: The statement `fact(N, X), X > 5~` will delete all facts from
+the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
+implementations use it.
+
 ### Notes, Features and Properties
 
 * The engine implements semi-naive bottom-up evaluation.
@@ -109,6 +126,7 @@ equals ">=", less than "<" and less or equals "<=".
 * It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
 * It avoids third party dependencies because it is a proof-of-concept. It should be able to stand alone.
 * Values with "quoted strings" are supported.
+* Retract facts with the `~` operator, ex `p(q,r)~`
 
 ## Usage
 
@@ -202,10 +220,6 @@ caught earlier, like in `Rule#validate()`.
 
 ----
 
-The Racket language has a Datalog module as part of its library [rack]. I've looked at its API for ideas for my own. They use the syntax `<clause>~` for a retraction, e.g `parent(bob, john)~`, which is a syntax I might want to adopt. The [rack] implementation lacks some of the features of my version, like negation and queries with multiple goals.
-
-----
-
 I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X + Y = Z`, for now:
 
 * Arithmetic predicates aren't that simple. They should be evaluated as soon as the input 
@@ -229,9 +243,6 @@ I don't intend to implement it at the moment, though.
 ----
 
 In `expandStrata()`, if `newFacts` is also made an instance of `IndexedSet` then `getDependentRules()` only 
-needs to iterate over the index, rather than over the whole derived database. There may be a performance hit to the IndexedSet, 
-so measure whether it actually improves anything before committing to the idea.
+needs to iterate over the index, rather than over the whole derived database, but the `newFacts.removeAll(facts)` triggers
+a reindex of the IndexSet. I've left some comments in the code that suggests a workaround.
 
-----
-
-The `DatalogParser` class can be simply renamed to `Parser` - no need to prefix it...

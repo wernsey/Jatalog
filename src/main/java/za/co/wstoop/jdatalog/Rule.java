@@ -127,7 +127,6 @@ public class Rule {
 	 * @param bindings The bindings to substitute.
 	 * @return the Rule with the substituted bindings. 
 	 */
-	// TODO: Unit test Rule#substitute()
 	public Rule substitute(Map<String, String> bindings) {
 		List<Expr> subsBody = new ArrayList<>();
 		for(Expr e : body) {

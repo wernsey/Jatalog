@@ -181,7 +181,7 @@ public class Expr implements Indexable<String> {
                 bindings.put(term2, term1);
                 return true;
             } else {
-				if (DatalogParser.tryParseDouble(term1) && DatalogParser.tryParseDouble(term2)) {
+				if (Parser.tryParseDouble(term1) && Parser.tryParseDouble(term2)) {
 					double d1 = Double.parseDouble(term1);
 					double d2 = Double.parseDouble(term2);
 					return d1 == d2;
@@ -200,7 +200,7 @@ public class Expr implements Indexable<String> {
                 
                 if(predicate.equals("<>")) {
                     // '<>' is also a bit special
-                    if(DatalogParser.tryParseDouble(term1) && DatalogParser.tryParseDouble(term2)) {
+                    if(Parser.tryParseDouble(term1) && Parser.tryParseDouble(term2)) {
                             double d1 = Double.parseDouble(term1);
                             double d2 = Double.parseDouble(term2);
                             return d1 != d2;
@@ -211,10 +211,10 @@ public class Expr implements Indexable<String> {
                     // Ordinary comparison operator
                 	// If the term doesn't parse to a double it gets treated as 0.0.
                 	double d1 = 0.0, d2 = 0.0;
-                    if(DatalogParser.tryParseDouble(term1)) {
+                    if(Parser.tryParseDouble(term1)) {
                     	d1 = Double.parseDouble(term1);
                     }
-                    if(DatalogParser.tryParseDouble(term2)) {
+                    if(Parser.tryParseDouble(term2)) {
                     	d2 = Double.parseDouble(term2);
                     }
                     switch(predicate) {

@@ -13,8 +13,7 @@ import za.co.wstoop.jdatalog.statement.StatementFactory;
 /**
  * Internal class that encapsulates the parser for the Datalog language.
  */
-class DatalogParser {
-	
+class Parser {
 	
 	/* Parses a Datalog statement.
      * A statement can be:
@@ -29,24 +28,6 @@ class DatalogParser {
     	
         Profiler.Timer timer = Profiler.getTimer("parseStmt");
         try {
-
-            scan.nextToken();
-            // "delete a(b,X)." deletes facts from the IDB that matches the query.
-            // It is not standard Datalog AFAIK.
-            if(scan.ttype == StreamTokenizer.TT_WORD && scan.sval.equalsIgnoreCase("delete")) {
-                goals.clear();
-                do {
-                    Expr e = parseExpr(scan);
-                    goals.add(e);
-                } while(scan.nextToken() == ',');
-                if(scan.ttype != '.') {
-                    throw new DatalogException("[line " + scan.lineno() + "] Expected '.' after 'delete'");
-                }
-                return StatementFactory.deleteFact(goals);
-            } else {
-                scan.pushBack();
-            }
-
             Expr head = parseExpr(scan);
             if(scan.nextToken() == ':') {
                 // We're dealing with a rule
@@ -62,7 +43,7 @@ class DatalogParser {
                 if(scan.ttype != '.') {
                     throw new DatalogException("[line " + scan.lineno() + "] Expected '.' after rule");
                 }
-                    Rule newRule = new Rule(head, body);
+				Rule newRule = new Rule(head, body);
 				return StatementFactory.insertRule(newRule);
             } else {
                 // We're dealing with a fact, or a query
@@ -83,11 +64,13 @@ class DatalogParser {
                         scan.nextToken();
                     }
 
-                    if(scan.ttype == '?') {
+                    if (scan.ttype == '?') {
 						return StatementFactory.query(goals);
-                    } else {
-                        throw new DatalogException("[line " + scan.lineno() + "] Expected '?' after query");
-                    }
+					} else if (scan.ttype == '~') {
+						return StatementFactory.deleteFacts(goals);
+					} else {
+						throw new DatalogException("[line " + scan.lineno() + "] Expected '?' or '~' after query");
+					}
                 }
             }
         } catch (IOException e) {

@@ -8,6 +8,8 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Shell for JDatalog.
@@ -23,7 +25,9 @@ public class Shell {
     // TODO: The benchmarking is obsolete. Remove it.
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
-    static final int NUM_RUNS = 1000;
+    static final int NUM_RUNS = 20000;
+
+    private static final Pattern loadPattern = Pattern.compile("^(?i:load)\\s+(\\S+)\\s*$");
 
     /**
      * Main method.
@@ -97,6 +101,8 @@ public class Shell {
                         break; // EOF
                     }
                     
+                    Matcher m = loadPattern.matcher(line);
+                    
                     // Intercept some special commands
                     line = line.trim();
                     if(line.equalsIgnoreCase("exit")) {
@@ -104,6 +110,14 @@ public class Shell {
                     } else if(line.equalsIgnoreCase("dump")) {
                         System.out.println(jDatalog);
                         continue;
+					} else if (m.matches()) {
+						String filename = m.group(1);
+						System.out.println("Loading " + filename);
+						QueryOutput qo = new DefaultQueryOutput();
+						try (Reader reader = new BufferedReader(new FileReader(filename))) {
+							jDatalog.executeAll(reader, qo);
+						}
+						continue;
                     } else if(line.equalsIgnoreCase("validate")) {
                         jDatalog.validate();
                         System.out.println("OK."); // exception not thrown

@@ -52,7 +52,7 @@ public class StatementFactory {
 	 * @param goals The goals of the facts to delete
 	 * @return A statement that will delete facts matching the goals from the database.
 	 */
-	public static Statement deleteFact(List<Expr> goals) {
+	public static Statement deleteFacts(List<Expr> goals) {
 		return new DeleteStatement(goals);		
 	}
 }
