@@ -10,3 +10,7 @@ docs/
 .settings
 .classpath
 .project
+
+# Other
+*.bak
+*~

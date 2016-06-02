@@ -1,7 +1,6 @@
 package za.co.wstoop.jdatalog;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -209,14 +208,17 @@ public class JDatalog {
 			// Reorganize the goals so that negated literals are at the end.
 			List<Expr> orderedGoals = reorderQuery(goals);
 
-			// getRelevantRules() strips a large part of the rules, so if I want to
+			// getRelevantPredicates() strips a large part of the rules, so if I want to
 			// do some benchmarking of expandDatabase(), I use the IDB directly instead:
 			// Collection<Rule> rules = idb;
-			Collection<Rule> rules = getRelevantRules(goals);
+			Collection<String> predicates = getRelevantPredicates(goals);			
+			Collection<Rule> rules = idb.stream().filter(rule -> predicates.contains(rule.head.predicate)).collect(Collectors.toSet());
 
-			// TODO: There should be a mechanism here to filter the facts to only the ones relevant to the current query.
-			// See the notes in the README for more information.
-			IndexedSet<Expr, String> facts = new IndexedSet<>(edbProvider.allFacts());
+			// Build an IndexedSet<> with only the relevant facts for this particular query.			
+			IndexedSet<Expr, String> facts = new IndexedSet<>();
+			for(String predicate : predicates) {
+				facts.addAll(edbProvider.getFacts(predicate));
+			}
 
 			// Build the database. A Set ensures that the facts are unique
 			IndexedSet<Expr, String> resultSet = expandDatabase(facts, rules);
@@ -268,19 +270,21 @@ public class JDatalog {
     /* Returns a list of rules that are relevant to the query.
         If for example you're querying employment status, you don't care about family relationships, etc.
         The advantages of this of this optimization becomes bigger the more complex the rules get. */
-    private Collection<Rule> getRelevantRules(List<Expr> originalGoals) {
+    private Collection<String> getRelevantPredicates(List<Expr> originalGoals) {
         Profiler.Timer timer = Profiler.getTimer("getRelevantRules");
         try {
-            Collection<Rule> relevant = new HashSet<>();
+            Collection<String> relevant = new HashSet<>();
             LinkedList<Expr> goals = new LinkedList<>(originalGoals);
             while(!goals.isEmpty()) {
                 Expr expr = goals.poll();
+				if (!relevant.contains(expr.predicate)) {
+					relevant.add(expr.predicate);
                 for(Rule rule : idb) {
-                    if(rule.head.predicate.equals(expr.predicate) && !relevant.contains(rule)) {
-                        relevant.add(rule);
+						if (rule.head.predicate.equals(expr.predicate)) {
                         goals.addAll(rule.body);
                     }
                 }
+            }
             }
             return relevant;
         } finally {
@@ -565,21 +569,11 @@ public class JDatalog {
         // Search for negated loops:
         computeStratification(idb);
         
-        edbProvider.validate();
-    }
-
-    /**
-     * Dumps the contents of the database to a output stream
-     * @param out where to write the output to
-     */
-    public void dump(PrintStream out) {
-        out.println("% Facts:");
+        // Different EdbProvider implementations may have different ideas about how 
+        // to iterate through the EDB in the most efficient manner. so in the future
+        // it may be better to have the edbProvider validate the facts itself.
         for(Expr fact : edbProvider.allFacts()) {
-            out.println(fact + ".");
-        }
-        out.println("\n% Rules:");
-        for(Rule rule : idb) {
-            out.println(rule + ".");
+			fact.validFact();
         }
     }
 
@@ -686,6 +680,19 @@ public class JDatalog {
     	return delete(goals, null);
     }
 
+    @Override
+	public String toString() {
+        StringBuilder sb = new StringBuilder("% Facts:");
+        for(Expr fact : edbProvider.allFacts()) {
+            sb.append(fact).append(".\n");
+        }
+        sb.append("\n% Rules:");
+        for(Rule rule : idb) {
+            sb.append(rule).append(".\n");
+        }
+        return sb.toString();
+    }
+    
     /**
      * Formats a collection of JDatalog entities, like {@link Expr}s and {@link Rule}s 
      * @param collection the collection to convert to a string
@@ -750,7 +757,7 @@ public class JDatalog {
 	            	sb.append("Yes.");
 	            } else {
 	                for(Map<String, String> answer : answers) {
-	                	sb.append(JDatalog.toString(answer));
+	                	sb.append(JDatalog.toString(answer)).append("\n");
 	                }
 	            }
 	        } else {

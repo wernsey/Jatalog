@@ -226,21 +226,8 @@ I've decided against arithmetic built-in predicates, such as `plus(X,Y,Z) => X +
 
 ----
 
-There are several opportunities to optimize the EDB.
-
-You can trim facts before you start with `expandDatabase()` so that you only evaluate facts that are relevant to your goals.
-So, for example, if your goal is related to "cousins" then you can filter out facts related to "employment".
-The key is in this line in `query(List<Expr> goals)`:
-
-    IndexedSet<Expr,String> facts = new IndexedSet<>(edbProvider.allFacts());
-
-You'll have to replace it with something that only builds `facts` from facts that are relevant to the current query in the same way 
-that you filter the rules in `getRelevantRules()`. 
-
-The EDB is now abstracted behind an `EdbProvider` interface, but it will need a method `Collection<Expr> getFacts(String predicate)` 
-
-It is intended that users of the library will be able to use different sources for the EDB, such as a SQL database, CSV or XML files. For
-example, an EDB that is backed by a database can do a `SELECT * FROM predicate` when necessary. 
+The purpose of the `EdbProvider` interface to allow different sources for the EDB data, such as CSV or XML files or even
+a SQL database. For example, an EDB that is backed by a database can do a `SELECT * FROM predicate` when necessary. 
 
 The SQL idea will require statements like `query = "SELECT * FROM " + predicate;` to manage it, so you'd better first verify that 
 the `predicate` is only an alpha-numeric string.

@@ -30,10 +30,8 @@ public class BasicEdbProvider implements EdbProvider {
 	}
 
 	@Override
-	public void validate() throws DatalogException {
-		for (Expr fact : allFacts()) {
-			fact.validFact();
-		}
+	public Collection<Expr> getFacts(String predicate) {
+		return edb.getIndexed(predicate);
 	}
 
 }

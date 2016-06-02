@@ -23,7 +23,7 @@ public class Shell {
     // TODO: The benchmarking is obsolete. Remove it.
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
-    static final int NUM_RUNS = 10000;
+    static final int NUM_RUNS = 1000;
 
     /**
      * Main method.
@@ -102,7 +102,7 @@ public class Shell {
                     if(line.equalsIgnoreCase("exit")) {
                         break;
                     } else if(line.equalsIgnoreCase("dump")) {
-                        jDatalog.dump(System.out);
+                        System.out.println(jDatalog);
                         continue;
                     } else if(line.equalsIgnoreCase("validate")) {
                         jDatalog.validate();

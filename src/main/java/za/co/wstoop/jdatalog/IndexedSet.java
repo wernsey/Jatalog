@@ -23,7 +23,7 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	/**
 	 * Default constructor.
 	 */
-	IndexedSet() {
+	public IndexedSet() {
 		index = new HashMap<I, Set<E>>();
 		contents = new HashSet<>();
 	}
@@ -32,9 +32,17 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	 * Creates the set from a different collection.
 	 * @param elements
 	 */
-	IndexedSet(Collection<E> elements) {		
+	public IndexedSet(Collection<E> elements) {		
 		contents = new HashSet<>(elements);
 		reindex();
+	}
+	
+	/**
+	 * Returns all the indexes in the set
+	 * @return The indexes
+	 */
+	public Collection<I> getIndexes() {
+		return index.keySet();
 	}
 	
 	/**
@@ -43,18 +51,10 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	 * @param key The indexed element
 	 * @return The specified subset
 	 */
-	Set<E> getIndexed(I key) {		
+	public Set<E> getIndexed(I key) {		
 		Set<E> elements = index.get(key);
 		if(elements == null) return Collections.emptySet();
 		return elements;
-	}
-	
-	public boolean constainsKey(I key) {
-		return index.containsKey(key);
-	}
-	
-	public Collection<I> getIndexes() {
-		return index.keySet();
 	}
 	
 	private void reindex() {

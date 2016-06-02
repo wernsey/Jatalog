@@ -2,15 +2,19 @@ package za.co.wstoop.jdatalog;
 
 import java.util.Collection;
 
-
+/**
+ * The EdbProvider allows the EDB from JDatalog's perspective to be abstracted away from the actual
+ * storage mechanism.
+ * <p>
+ * JDatalog uses a {@link BasicEdbProvider} by default, which simply stores facts in memory, but it 
+ * can be changed through the {@link JDatalog#setEdbProvider(EdbProvider)} method. 
+ * </p> 
+ * @see BasicEdbProvider
+ */
 public interface EdbProvider {
 
 	/**
 	 * Retrieves a {@code Collection} of all the facts in the database.
-	 * <p>
-	 * TODO: I would very much like for the {@link JDatalog#query(java.util.List, java.util.Map)} not to depend on {@link #allFacts()}.
-	 * rather retrieve facts as needed. More info in the README
-	 * </p> 
 	 * @return All the facts in the EDB
 	 */
 	public Collection<Expr> allFacts();
@@ -29,11 +33,9 @@ public interface EdbProvider {
 	public boolean removeAll(Collection<Expr> facts);
 
 	/**
-	 * The `EdbProvider` has to validate the facts itself because 
-	 * facts stored in memory may have to be validated differently from facts backed by a 
-	 * database. The concern is that iterating through all of the facts in a database on 
-	 * disk may not scale that well if the number of facts increases.
-	 * @throws DatalogException if there are invalid facts in the EDB. See {@link Expr#validFact()}.
+	 * Retrieves all the facts in the database that match specific predicate.
+	 * @param predicate The predicate of the facts to be retrieved.
+	 * @return A collection of facts matching the {@code predicate}
 	 */
-	public void validate() throws DatalogException;
+	public Collection<Expr> getFacts(String predicate);
 }
