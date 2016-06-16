@@ -7,9 +7,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.StringTokenizer;
 
 /**
  * Shell for JDatalog.
@@ -26,8 +27,6 @@ public class Shell {
     // If you want to do benchmarking, run the file several times to get finer grained results.
     private static final boolean BENCHMARK = false;
     static final int NUM_RUNS = 1000;
-
-    private static final Pattern loadPattern = Pattern.compile("^(?i:load)\\s+(\\S+)\\s*$");
 
     /**
      * Main method.
@@ -93,7 +92,11 @@ public class Shell {
             // Get input from command line
             JDatalog jDatalog = new JDatalog();
             BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("JDatalog: Java Datalog engine\nInteractive mode; type 'exit' to quit.");
+            System.out.println("JDatalog: Java Datalog engine\nInteractive mode; Type 'help' for commands, 'exit' to quit.");
+
+            boolean timer = false;
+            List<String> history = new LinkedList<>();
+
             while(true) {
                 try {
                     System.out.print("> ");
@@ -101,32 +104,76 @@ public class Shell {
                     if(line == null) {
                         break; // EOF
                     }
-                    
-                    Matcher m = loadPattern.matcher(line);
-                    
-                    // Intercept some special commands
                     line = line.trim();
-                    if(line.equalsIgnoreCase("exit")) {
-                        break;
-                    } else if(line.equalsIgnoreCase("dump")) {
-                        System.out.println(jDatalog);
+                    StringTokenizer tokenizer = new StringTokenizer(line);
+                    if(!tokenizer.hasMoreTokens())
                         continue;
-					} else if (m.matches()) {
-						String filename = m.group(1);
-						System.out.println("Loading " + filename);
-						QueryOutput qo = new DefaultQueryOutput();
-						try (Reader reader = new BufferedReader(new FileReader(filename))) {
-							jDatalog.executeAll(reader, qo);
-						}
-						continue;
-                    } else if(line.equalsIgnoreCase("validate")) {
+                    String command = tokenizer.nextToken().toLowerCase();
+
+                    // Intercept some special commands
+                    if(command.equals("exit")) {
+                        break;
+                    } else if(command.equals("dump")) {
+                        System.out.println(jDatalog);
+                        history.add(line);
+                        continue;
+                    } else if(command.equals("history")) {
+                        for(String item : history) {
+                            System.out.println(item);
+                        }
+                        continue;
+                    } else if (command.equals("load")) {
+                        if(!tokenizer.hasMoreTokens()) {
+                            System.err.println("error: filename expected");
+                            continue;
+                        }
+                        String filename = tokenizer.nextToken();
+                        QueryOutput qo = new DefaultQueryOutput();
+                        try (Reader reader = new BufferedReader(new FileReader(filename))) {
+                            jDatalog.executeAll(reader, qo);
+                        }
+                        System.out.println("OK."); // exception not thrown
+                        history.add(line);
+                        continue;
+                    } else if(command.equals("validate")) {
                         jDatalog.validate();
                         System.out.println("OK."); // exception not thrown
+                        history.add(line);
+                        continue;
+                    } else if (command.equals("timer")) {
+                        if(!tokenizer.hasMoreTokens()) {
+                            timer = !timer;
+                        } else {
+                            timer = tokenizer.nextToken().matches("(?i:yes|on|true)");
+                        }
+                        System.out.println("Timer is now " + (timer?"on":"off"));
+                        history.add(line);
+                        continue;
+                    } else if(command.equals("help")) {
+                        System.out.println("load filename  - Loads and executes the specified file.");
+                        System.out.println("timer [on|off] - Enable/disable the query timer.");
+                        System.out.println("validate       - Validates the facts and rules in the database.");
+                        System.out.println("dump           - Displays the facts and rules on the console.");
+                        System.out.println("history        - Displays all commands entered in this session.");
+                        System.out.println("help           - Displays this message.");
+                        System.out.println("exit           - Quits the program.");
                         continue;
                     }
 
+                    long start = System.currentTimeMillis();
                     Collection<Map<String, String>> answers = jDatalog.executeAll(line);
-                    System.out.println(OutputUtils.answersToString(answers));                   
+                    double elapsed = (System.currentTimeMillis() - start)/1000.0;
+
+                    if (answers != null) {
+                        // line contained a query with an answer.
+                        String result = OutputUtils.answersToString(answers);
+                        System.out.println(result);
+
+                        if(timer) {
+                            System.out.println(String.format(" %.3fs elapsed", elapsed));
+                        }
+                    }
+                    history.add(line);
 
                 } catch (DatalogException | IOException e) {
                     e.printStackTrace();

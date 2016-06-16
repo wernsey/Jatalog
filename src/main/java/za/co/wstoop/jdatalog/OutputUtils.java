@@ -1,6 +1,7 @@
 package za.co.wstoop.jdatalog;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -8,9 +9,9 @@ import java.util.Map;
  * Utilities for processing {@link JDatalog}'s output.
  */
 public class OutputUtils {
-    
+
     /**
-     * Formats a collection of JDatalog entities, like {@link Expr}s and {@link Rule}s 
+     * Formats a collection of JDatalog entities, like {@link Expr}s and {@link Rule}s
      * @param collection the collection to convert to a string
      * @return A String representation of the collection.
      */
@@ -44,42 +45,46 @@ public class OutputUtils {
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Helper method to convert a collection of answers to a String.
      * <ul>
-	 * <li> If {@code answers} is null, the line passed to {@code jDatalog.query(line)} was a statement that didn't
-	 *      produce any results, like a fact or a rule, rather than a query.
-	 * <li> If {@code answers} is empty, then it was a query that doesn't have any answers, so the output is "No."
-	 * <li> If {@code answers} is a list of empty maps, then it was the type of query that only wanted a yes/no
-	 *      answer, like {@code siblings(alice,bob)} and the answer is "Yes."
-	 * <li> Otherwise {@code answers} is a list of all bindings that satisfy the query.
-	 * </ul>
+     * <li> If {@code answers} is null, the line passed to {@code jDatalog.query(line)} was a statement that didn't
+     *      produce any results, like a fact or a rule, rather than a query.
+     * <li> If {@code answers} is empty, then it was a query that doesn't have any answers, so the output is "No."
+     * <li> If {@code answers} is a list of empty maps, then it was the type of query that only wanted a yes/no
+     *      answer, like {@code siblings(alice,bob)} and the answer is "Yes."
+     * <li> Otherwise {@code answers} is a list of all bindings that satisfy the query.
+     * </ul>
      * @param answers The collection of answers
      * @return A string representing the answers.
      */
     public static String answersToString(Collection<Map<String, String>> answers) {
 
-    	StringBuilder sb = new StringBuilder();
-	    // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
-	    //      produce any results, like a fact or a rule, rather than a query.
-	    // If `answers` is empty, then it was a query that doesn't have any answers, so the output is "No."
-	    // If `answers` is a list of empty maps, then it was the type of query that only wanted a yes/no
-	    //      answer, like `siblings(alice,bob)?` and the answer is "Yes."
-	    // Otherwise `answers` is a list of all bindings that satisfy the query.
-	    if(answers != null) {
-	        if(!answers.isEmpty()){
-	            if(answers.iterator().next().isEmpty()) {
-	            	sb.append("Yes.");
-	            } else {
-	                for(Map<String, String> answer : answers) {
-	                	sb.append(bindingsToString(answer)).append("\n");
-	                }
-	            }
-	        } else {
-	        	sb.append("No.");
-	        }
-	    }
-	    return sb.toString();
+        StringBuilder sb = new StringBuilder();
+        // If `answers` is null, the line passed to `jDatalog.query(line)` was a statement that didn't
+        //      produce any results, like a fact or a rule, rather than a query.
+        // If `answers` is empty, then it was a query that doesn't have any answers, so the output is "No."
+        // If `answers` is a list of empty maps, then it was the type of query that only wanted a yes/no
+        //      answer, like `siblings(alice,bob)?` and the answer is "Yes."
+        // Otherwise `answers` is a list of all bindings that satisfy the query.
+        if(answers != null) {
+            if(!answers.isEmpty()){
+                if(answers.iterator().next().isEmpty()) {
+                    sb.append("Yes.");
+                } else {
+                    Iterator<Map<String, String>> iter = answers.iterator();
+                    while (iter.hasNext()) {
+                        sb.append(bindingsToString(iter.next()));
+                        if (iter.hasNext()) {
+                            sb.append("\n");
+                        }
+                    }
+                }
+            } else {
+                sb.append("No.");
+            }
+        }
+        return sb.toString();
     }
 }
