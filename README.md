@@ -74,6 +74,16 @@ Queries can be run against the database once the facts and the rules have been e
 Answers come in the form of a collection of the mapping of variable names to values that satisfy the query. For example, the
 query `ancestor(X, carol)?`'s results will be `{X: alice}` and `{X: bob}`.
 
+In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
+equals ">=", less than "<" and less or equals "<=".
+
+Jatalog has the `~` symbol for retracting facts form the database. For example, the statement `planet(pluto)~` will retract 
+the fact that `pluto` is a `planet`.
+
+The retract query can contain variables and multiple clauses: The statement `thing(N, X), X > 5~` will delete all _things_
+from the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
+implementations use it.
+
 ### Fluent API
 
 In addition to an interpreter for the Datalog language, Jatalog also provides an API through which the database can be accessed and
@@ -104,16 +114,6 @@ which can then be used to do batch inserts or queries, for example:
     
 In the above example, the variable `Me` is bound to the value `bob`, so the `statement.execute(...)` line is equivalent to
 executing the query `sibling(bob, You)?`.
-
-In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
-equals ">=", less than "<" and less or equals "<=".
-
-Jatalog has the `~` symbol for retracting facts form the database. For example, the statement `planet(pluto)~` will retract 
-the fact that `pluto` is a `planet`.
-
-The retract query can contain variables and multiple clauses: The statement `thing(N, X), X > 5~` will delete all _things_
-from the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
-implementations use it.
 
 The Javadoc documentation contains more information and the unit tests in the `src/test` directory contain some more examples.
 
