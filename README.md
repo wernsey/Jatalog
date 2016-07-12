@@ -1,6 +1,20 @@
-# Java Datalog Engine with Semi-Naive Evaluation and Stratified Negation
+# Jatalog: Java Datalog Engine with Semi-Naive Evaluation and Stratified Negation
 
 Datalog is a subset of the Prolog programming language that is used as a query language in deductive databases.
+
+Jatalog is a Datalog implementation in Java.
+
+## Summary
+
+* The engine implements semi-naive, bottom-up evaluation.
+* It implements stratified negation; Technically, it implements the _Stratified Datalog&not;_ language.
+* It can parse and evaluate Datalog programs from files and Strings (actually anything that implements `java.io.Reader`).
+* It has a fluent API through which it can be embedded in Java applications to run queries.
+* It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
+* It avoids third party dependencies.
+* Values with "quoted strings" are supported.
+* Retract facts with the `~` operator, for example `p(q,r)~`.
+* The class `Shell` implements a REPL command-line interface.
 
 ## Introduction
 
@@ -10,9 +24,11 @@ relationships between facts from which new facts can be derived.
 The following Datalog program describes that Alice is a parent of Bob and Bob is a parent of Carol, and then
 provides rules for deriving an ancestor relationship from the facts:
 
+    % Facts:
     parent(alice, bob).
     parent(bob, carol).
     
+    % Rules:
     ancestor(X, Y) :- parent(X, Y).
     ancestor(X, Y) :- ancestor(X, Z), parent(Z, Y).
 
@@ -36,16 +52,18 @@ fact should be derived.
 
 In the rule `ancestor(X, Y) :- parent(X, Y)` the `ancestor(X, Y)` is the head, and `parent(X, Y)` is
 the body. It specifies that the fact "`X` is an ancestor of `Y`" can be derived if the fact "`X` is a parent of `Y`"
-holds true.
+holds true. 
 
-Using this rule, Datalog will determine that "`alice` is an ancestor of `bob`" and "`bob` is an ancestor of `carol`"
-when queries are executed.
+It is also said that the body of the rule _implies_ the head, so `ancestor(X, Y)` implies `parent(X, Y)`.
+
+The Datalog engine will use this rule to determine that "`alice` is an ancestor of `bob`" and "`bob` is an ancestor 
+of `carol`" when queries are executed.
 
 The second rule `ancestor(X, Y) :- ancestor(X, Z), parent(Z, Y)` says that the fact "`X` is an ancestor of `Y`"
 can also be derived if there exists a `Z` such that "`X` is an ancestor of `Z`" _and_ "`Z` is a parent of `Y`".
 
-Using this rule, Datalog will determine that "`alice` is an ancestor of `carol`" from all the other facts that have already
-been derived.
+Using this rule, the Datalog engine will determine that "`alice` is an ancestor of `carol`" from all the other facts 
+that have already been derived during query evaluation.
 
 Queries can be run against the database once the facts and the rules have been entered into the system:
 
@@ -54,11 +72,11 @@ Queries can be run against the database once the facts and the rules have been e
  * `ancestor(alice, carol)?` asks "Is `alice` an ancestor of `carol`?"
 
 Answers come in the form of a collection of the mapping of variable names to values that satisfy the query. For example, the
-query `ancestor(X, carol)?`'s results will be `{X: alice}` and `{X: bob}`
+query `ancestor(X, carol)?`'s results will be `{X: alice}` and `{X: bob}`.
 
 ### Fluent API
 
-In addition to a parser for the Datalog language, Jatalog also provides an API through which the database can be accessed and
+In addition to an interpreter for the Datalog language, Jatalog also provides an API through which the database can be accessed and
 queried directly in Java programs.
 
 The following is an example of how the facts and the rules from above example can be written using the Fluent API:
@@ -84,10 +102,20 @@ which can then be used to do batch inserts or queries, for example:
     Collection<Map<String, String>> answers;
     answers = statement.execute(jatalog, bindings);
     
-In the above example, the variable `Me` is bound to the value `bob`, so the `statement.execute()` line is equivalent to
-executing the query `sibling(bob, You)?`
+In the above example, the variable `Me` is bound to the value `bob`, so the `statement.execute(...)` line is equivalent to
+executing the query `sibling(bob, You)?`.
 
-The Javadoc documentation contains more information and the unit tests contain some more examples.
+In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
+equals ">=", less than "<" and less or equals "<=".
+
+Jatalog has the `~` symbol for retracting facts form the database. For example, the statement `planet(pluto)~` will retract 
+the fact that `pluto` is a `planet`.
+
+The retract query can contain variables and multiple clauses: The statement `thing(N, X), X > 5~` will delete all _things_
+from the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
+implementations use it.
+
+The Javadoc documentation contains more information and the unit tests in the `src/test` directory contain some more examples.
 
 ### Implementation
 
@@ -95,38 +123,24 @@ Jatalog's evaluation engine is bottom-up, semi-naive with stratified negation.
 
 _Bottom-up_ means that the evaluator will start with all the known facts in the EDB and use the rules to derive new facts.
 It will repeat this process until no more new facts can be derived. It will then match all of the facts to the goal of the
-query to determine the answer (The alternative is _top-down_ where the evaluator starts with a series of goals and use the
-rules and facts in the database to prove the goal).
+query to determine the answer (The alternative is _top-down_, where the evaluator starts with a series of goals and use the
+rules and facts in the database to prove those goals).
 
-_Semi-naive_ is an optimization wherein the evaluator will only consider a subset of the rules that may be affected by facts
-derived during the previous iteration, rather than all of the rules in the IDB.
+_Semi-naive_ is an optimization of the Datalog engine wherein the evaluator will only consider a subset of the rules that may 
+be affected by facts derived during the previous iteration, rather than all of the rules in the IDB.
 
-_Stratified negation_ arranges the order in which rules are evaluated in such a way that negated goals "makes sense". Consider,
-for example, the rule `p(X) :- q(X), not r(X).`: All the `r(X)` facts must be derived first before the `p(X)`
-facts can be derived. If the rules are evaluated in the wrong order then the evaluator may derive a fact `p(a)` in one
-iteration and then derive `r(a)` in a future iteration which will contradict each other.
+_Stratified negation_ means that the order in which rules are evaluated are arranged in such a way that negated goals cause
+sensible facts to be derived. 
 
-Stratification also puts additional constraints on the usage of negated expressions in Jatalog, which the engine checks for.
+Consider, for example, the rule `p(X) :- q(X), not r(X).` with the fact `q(a)` present in the EDB, but not `r(a)`, 
+and suppose that there are other rules in the database that imply `p(X)` and `r(X)`. If the engine evaluates these rules 
+naively then the evaluator will derive the fact `p(a)` in the first iteration. It is then possible that the fact `r(a)` may 
+be derived in a subsequent iteration, which results in the facts `p(a)` and `r(a)` contradicting each other.
 
-In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
-equals ">=", less than "<" and less or equals "<=".
+The stratified negation evaluates the rules in an order such that all the `r(X)` facts are derived before any of the `p(X)` 
+facts can be derived which eliminates such contradictions.
 
-Jatalog has the `query~` for retracting facts form the database. For example, `planet(pluto)~` will retract the 
-fact that `pluto` is a `planet`. 
-The query can contain variables and multiple clauses: The statement `fact(N, X), X > 5~` will delete all facts from
-the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
-implementations use it.
-
-### Notes, Features and Properties
-
-* The engine implements semi-naive bottom-up evaluation.
-* It implements stratified negation, or _Stratified Datalog&not;_.
-* It can parse and evaluate Datalog programs from files and Strings (actually anything that implements `java.io.Reader`).
-* It has a fluent API through which it can be embedded in Java applications to run queries. See the unit tests for examples.
-* It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
-* It avoids third party dependencies because it is a proof-of-concept. It should be able to stand alone.
-* Values with "quoted strings" are supported.
-* Retract facts with the `~` operator, ex `p(q,r)~`
+Stratified negation puts additional constraints on the usage of negated expressions in Jatalog, which the engine checks for.
 
 ## Usage
 
@@ -241,6 +255,5 @@ The `isVariable()` method will just have to be modified to check whether its par
 and starts with an upper-case character, the bindings will become a `Map<String, Object>`, the result of 
 `query()` will be a `List<Map<String, Object>>` and a couple of `toString()` methods will have to be modified. 
 
-It won't be that useful a feature if you just use the parser, but it could be a *nice-to-have* if you use the fluent API. 
+It won't be that useful a feature if you just use the interpreter, but it could be a *nice-to-have* if you use the fluent API. 
 I don't intend to implement it at the moment, though.
-
