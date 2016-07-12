@@ -1,4 +1,4 @@
-<project name="jdatalog" default="dist" basedir=".">
+<project name="jatalog" default="dist" basedir=".">
 	<description>Java Datalog Engine with Stratified Negation</description>
 
 	<!-- Maven is main build tool for this project, but the Ant build file is provided
@@ -34,7 +34,7 @@
 			<classpath location="lib/junit-4.12.jar" />
 		</javac>
 	</target>
-	<target name="test" depends="compile-test">
+	<target name="test" depends="compile-test,dist">
 		<mkdir dir="${reports}" />
 		<junit printsummary="yes" haltonfailure="yes">
 			<classpath location="${build}" />
@@ -52,14 +52,14 @@
 
 	<target name="docs" >
 		<mkdir dir="${docs}"/>
-		<javadoc sourcepath="${src}" destdir="${docs}" windowtitle="JDatalog: Java Datalog Engine" noqualifier="all" />
+		<javadoc sourcepath="${src}" destdir="${docs}" windowtitle="Jatalog: Java Datalog Engine" noqualifier="all" />
 	</target>
 
 	<target name="dist" depends="compile">
 		<mkdir dir="${dist}"/>
-		<jar jarfile="${dist}/jdatalog-${version}.jar" basedir="${build}">
+		<jar jarfile="${dist}/jatalog-${version}.jar" basedir="${build}">
 			<manifest>
-				<attribute name="Main-Class" value="za.co.wstoop.jdatalog.Shell"/>
+				<attribute name="Main-Class" value="za.co.wstoop.jatalog.Shell"/>
 			</manifest>
 		</jar>
 	</target>

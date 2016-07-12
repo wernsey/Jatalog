@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>za.co.wstoop</groupId>
-	<artifactId>jdatalog</artifactId>
+	<artifactId>jatalog</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>jdatalog</name>
+	<name>jatalog</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -33,7 +33,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>za.co.wstoop.jdatalog.Shell</mainClass>
+							<mainClass>za.co.wstoop.jatalog.Shell</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

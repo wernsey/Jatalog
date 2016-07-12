@@ -58,31 +58,31 @@ query `ancestor(X, carol)?`'s results will be `{X: alice}` and `{X: bob}`
 
 ### Fluent API
 
-In addition to a parser for the Datalog language, JDatalog also provides an API through which the database can be accessed and
+In addition to a parser for the Datalog language, Jatalog also provides an API through which the database can be accessed and
 queried directly in Java programs.
 
 The following is an example of how the facts and the rules from above example can be written using the Fluent API:
 
-    JDatalog jDatalog = new JDatalog();
+    Jatalog jatalog = new Jatalog();
     
-    jDatalog.fact("parent", "alice", "bob")
+    jatalog.fact("parent", "alice", "bob")
         .fact("parent", "bob", "carol");
     
-    jDatalog.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Z"), Expr.expr("ancestor", "Z", "Y"))
+    jatalog.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Z"), Expr.expr("ancestor", "Z", "Y"))
         .rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Y"));
 
 The queries can then then be executed as follows:
 
     Collection<Map<String, String>> answers;
-    answers = jDatalog.query(Expr.expr("ancestor", "X", "carol"));
+    answers = jatalog.query(Expr.expr("ancestor", "X", "carol"));
 
-In addition, there is also a `JDatalog.prepareStatement()` method that will parse strings into `Statement` objects
+In addition, there is also a `Jatalog.prepareStatement()` method that will parse strings into `Statement` objects
 which can then be used to do batch inserts or queries, for example: 
 
-    Statement statement = JDatalog.prepareStatement("sibling(Me, You)?");
-    Map<String, String> bindings = JDatalog.makeBindings("Me", "bob");
+    Statement statement = Jatalog.prepareStatement("sibling(Me, You)?");
+    Map<String, String> bindings = Jatalog.makeBindings("Me", "bob");
     Collection<Map<String, String>> answers;
-    answers = statement.execute(jDatalog, bindings);
+    answers = statement.execute(jatalog, bindings);
     
 In the above example, the variable `Me` is bound to the value `bob`, so the `statement.execute()` line is equivalent to
 executing the query `sibling(bob, You)?`
@@ -91,7 +91,7 @@ The Javadoc documentation contains more information and the unit tests contain s
 
 ### Implementation
 
-JDatalog's evaluation engine is bottom-up, semi-naive with stratified negation.
+Jatalog's evaluation engine is bottom-up, semi-naive with stratified negation.
 
 _Bottom-up_ means that the evaluator will start with all the known facts in the EDB and use the rules to derive new facts.
 It will repeat this process until no more new facts can be derived. It will then match all of the facts to the goal of the
@@ -106,12 +106,12 @@ for example, the rule `p(X) :- q(X), not r(X).`: All the `r(X)` facts must be de
 facts can be derived. If the rules are evaluated in the wrong order then the evaluator may derive a fact `p(a)` in one
 iteration and then derive `r(a)` in a future iteration which will contradict each other.
 
-Stratification also puts additional constraints on the usage of negated expressions in JDatalog, which the engine checks for.
+Stratification also puts additional constraints on the usage of negated expressions in Jatalog, which the engine checks for.
 
-In addition JDatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
+In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
 equals ">=", less than "<" and less or equals "<=".
 
-JDatalog has the `query~` for retracting facts form the database. For example, `planet(pluto)~` will retract the 
+Jatalog has the `query~` for retracting facts form the database. For example, `planet(pluto)~` will retract the 
 fact that `pluto` is a `planet`. 
 The query can contain variables and multiple clauses: The statement `fact(N, X), X > 5~` will delete all facts from
 the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
@@ -132,7 +132,7 @@ implementations use it.
 
 ### With Maven
 
-The preferred method of building JDatalog is through [Maven](https://maven.apache.org/).
+The preferred method of building Jatalog is through [Maven](https://maven.apache.org/).
 
     # Compile like so:
     mvn package
@@ -141,7 +141,7 @@ The preferred method of building JDatalog is through [Maven](https://maven.apach
     mvn javadoc:javadoc
 
     # Run like so:
-    java -jar target\jdatalog-0.0.1-SNAPSHOT.jar [filename]
+    java -jar target\jatalog-0.0.1-SNAPSHOT.jar [filename]
     
 ### With Ant
 
@@ -154,12 +154,12 @@ An [Ant](http://ant.apache.org/) build.xml file is also provided:
     ant docs
     
     # Run like so:
-    java -jar dist\jdatalog-0.0.1.jar
+    java -jar dist\jatalog-0.0.1.jar
 
 
 ## License
 
-JDatalog is licensed under the [Apache license version 2](http://www.apache.org/licenses/LICENSE-2.0):
+Jatalog is licensed under the [Apache license version 2](http://www.apache.org/licenses/LICENSE-2.0):
 
     Copyright 2015-2016 Werner Stoop
     
@@ -206,8 +206,6 @@ JDatalog is licensed under the [Apache license version 2](http://www.apache.org/
 ## Ideas and Notes
 
 *Just some thoughts on how the system is currently implemented and how it can be improved in the future*
-
-TODO: I could've named the program Jatalog. _Catchy!_
 
 ----
 
