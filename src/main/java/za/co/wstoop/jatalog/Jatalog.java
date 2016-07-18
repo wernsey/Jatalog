@@ -686,9 +686,10 @@ public class Jatalog {
 	 * Parses a string into a statement that can be executed against the database.
 	 * @param statement The string of the statement to parse.
 	 * <ul>
-	 *  <li>Statements ending with '.'s will insert either rules or facts.
-	 *  <li>Statements ending with '?' are queries.
-	 *  <li> FIXME: Statements ending with '~' are delete statements.
+	 *  <li> Statements ending with '.'s will insert either rules or facts.
+	 *  <li> Statements ending with '?' are queries.
+	 *  <li> Statements ending with '~' are retract statements - they will remove
+	 *       facts from the database.
 	 * </ul>
 	 * @return A Statement object whose {@link Statement#execute(Jatalog) execute} method 
 	 * 	can be called against the database at a later stage.

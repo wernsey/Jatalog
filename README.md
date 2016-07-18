@@ -1,20 +1,21 @@
 # Jatalog: Java Datalog Engine with Semi-Naive Evaluation and Stratified Negation
 
-Datalog is a subset of the Prolog programming language that is used as a query language in deductive databases.
+Datalog is a subset of the Prolog programming language that is used as a query language in deductive databases<sub>[wiki]</sub>.
 
-Jatalog is a Datalog implementation in Java.
+Jatalog is a Datalog implementation in Java. It provides a parser for the language and an evaluation engine to 
+execute queries that can be embedded into larger applications.
 
 ## Summary
 
 * The engine implements semi-naive, bottom-up evaluation.
-* It implements stratified negation; Technically, it implements the _Stratified Datalog&not;_ language.
+* It implements stratified negation; Technically, it implements the _Stratified Datalog&not;_ language<sub>[ceri]</sub>.
 * It can parse and evaluate Datalog programs from files and Strings (actually anything that implements `java.io.Reader`).
 * It has a fluent API through which it can be embedded in Java applications to run queries.
 * It implements "=", "<>" (alternatively "!="), "<", "<=", ">" and ">=" as built-in predicates.
 * It avoids third party dependencies.
 * Values with "quoted strings" are supported.
 * Retract facts with the `~` operator, for example `p(q,r)~`.
-* The class `Shell` implements a REPL command-line interface.
+* The class `Shell` implements a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) command-line interface.
 
 ## Introduction
 
@@ -22,7 +23,7 @@ A Datalog program consists of facts and rules. Facts describe knowledge about th
 relationships between facts from which new facts can be derived.
 
 The following Datalog program describes that Alice is a parent of Bob and Bob is a parent of Carol, and then
-provides rules for deriving an ancestor relationship from the facts:
+provides rules for deriving an ancestor relationship from the facts<sub>[wiki]</sub>:
 
     % Facts:
     parent(alice, bob).
@@ -54,7 +55,7 @@ In the rule `ancestor(X, Y) :- parent(X, Y)` the `ancestor(X, Y)` is the head, a
 the body. It specifies that the fact "`X` is an ancestor of `Y`" can be derived if the fact "`X` is a parent of `Y`"
 holds true. 
 
-It is also said that the body of the rule _implies_ the head, so `ancestor(X, Y)` implies `parent(X, Y)`.
+It is also said that the body of the rule _implies_ the head, so `parent(X, Y)` implies `ancestor(X, Y)`.
 
 The Datalog engine will use this rule to determine that "`alice` is an ancestor of `bob`" and "`bob` is an ancestor 
 of `carol`" when queries are executed.
@@ -81,7 +82,7 @@ Jatalog has the `~` symbol for retracting facts form the database. For example, 
 the fact that `pluto` is a `planet`.
 
 The retract query can contain variables and multiple clauses: The statement `thing(N, X), X > 5~` will delete all _things_
-from the database where `X` is greater than 5. The syntax comes from [rack], but it is unclear whether other Datalog 
+from the database where `X` is greater than 5. The syntax is borrowed from [rack], but I don't know whether other Datalog 
 implementations use it.
 
 ### Fluent API
@@ -104,8 +105,14 @@ The queries can then then be executed as follows:
     Collection<Map<String, String>> answers;
     answers = jatalog.query(Expr.expr("ancestor", "X", "carol"));
 
+The `answers` collection will contain a list of all the variable mappings that satisfy the query:
+
+    {X: alice}
+    {X: bob}
+
 In addition, there is also a `Jatalog.prepareStatement()` method that will parse strings into `Statement` objects
-which can then be used to do batch inserts or queries, for example: 
+that can be executed later. The `Statement.execute()` method takes a `Map<String, String>` of variable bindings
+as a parameter, so that it can be used to do batch inserts or queries. For example: 
 
     Statement statement = Jatalog.prepareStatement("sibling(Me, You)?");
     Map<String, String> bindings = Jatalog.makeBindings("Me", "bob");
@@ -133,8 +140,8 @@ _Stratified negation_ means that the order in which rules are evaluated are arra
 sensible facts to be derived. 
 
 Consider, for example, the rule `p(X) :- q(X), not r(X).` with the fact `q(a)` present in the EDB, but not `r(a)`, 
-and suppose that there are other rules in the database that imply `p(X)` and `r(X)`. If the engine evaluates these rules 
-naively then the evaluator will derive the fact `p(a)` in the first iteration. It is then possible that the fact `r(a)` may 
+and suppose that there are other rules in the database that imply `p(X)` and `r(X)`. If the engine were to evaluate these rules 
+naively then it will derive the fact `p(a)` in the initial iteration. It is then possible that the fact `r(a)` may 
 be derived in a subsequent iteration, which results in the facts `p(a)` and `r(a)` contradicting each other.
 
 The stratified negation evaluates the rules in an order such that all the `r(X)` facts are derived before any of the `p(X)` 
@@ -143,6 +150,11 @@ facts can be derived which eliminates such contradictions.
 Stratified negation puts additional constraints on the usage of negated expressions in Jatalog, which the engine checks for.
 
 ## Usage
+
+If you want to use the Java API, you just need to add the compiled JAR to your classpath.
+
+The `Main-Class` in the JAR's manifest points to `za.co.wstoop.jatalog.Shell`, which implements the REPL interface. To start 
+the interpreter, simply run the JAR file with the Java `-jar` command-line option.
 
 ### With Maven
 
@@ -155,11 +167,14 @@ The preferred method of building Jatalog is through [Maven](https://maven.apache
     mvn javadoc:javadoc
 
     # Run like so:
-    java -jar target\jatalog-0.0.1-SNAPSHOT.jar [filename]
+    java -jar target/jatalog-0.0.1-SNAPSHOT.jar file.dl
+
+Where `file.dl` is the name of a file containing Datalog commands to be executed. It is omitted, the interpreter will enter
+an interactive mode where commands will be read from `System.in`
     
 ### With Ant
 
-An [Ant](http://ant.apache.org/) build.xml file is also provided:
+An [Ant](http://ant.apache.org/) `build.xml` file is also provided:
 
     # Compile like so:
     ant 
@@ -168,7 +183,7 @@ An [Ant](http://ant.apache.org/) build.xml file is also provided:
     ant docs
     
     # Run like so:
-    java -jar dist\jatalog-0.0.1.jar
+    java -jar dist/jatalog-0.9.jar
 
 
 ## License
@@ -191,35 +206,35 @@ Jatalog is licensed under the [Apache license version 2](http://www.apache.org/l
 
 ## References:
 
-* [wiki]  Wikipedia topic, http://en.wikipedia.org/wiki/Datalog
+* [wiki]  Wikipedia topic, <http://en.wikipedia.org/wiki/Datalog>
 * [elma]  Fundamentals of Database Systems (3rd Edition); Ramez Elmasri, Shamkant Navathe
 * [ceri]  What You Always Wanted to Know About Datalog (And Never Dared to Ask); Stefano Ceri, Georg Gottlob, and Letizia Tanca
 * [bra1]  Deductive Databases and Logic Programming; Stefan Brass, Univ. Halle, 2009
-            http://dbs.informatik.uni-halle.de/Lehre/LP09/c6_botup.pdf
-* [banc]  An Amateur’s Introduction to Recursive Query Processing Strategies; Francois Bancilhon, Raghu Ramakrishnan
-* [mixu]  mixu/datalog.js; Mikito Takada, https://github.com/mixu/datalog.js
-* [kett]  bottom-up-datalog-js; Frederic Kettelhoit http://fkettelhoit.github.io/bottom-up-datalog-js/docs/dl.html
-* [davi]  Inference in Datalog; Ernest Davis, http://cs.nyu.edu/faculty/davise/ai/datalog.html
+            <http://dbs.informatik.uni-halle.de/Lehre/LP09/c6_botup.pdf>
+* [banc]  An Amateur's Introduction to Recursive Query Processing Strategies; Francois Bancilhon, Raghu Ramakrishnan
+* [mixu]  mixu/datalog.js; Mikito Takada, <https://github.com/mixu/datalog.js>
+* [kett]  bottom-up-datalog-js; Frederic Kettelhoit <http://fkettelhoit.github.io/bottom-up-datalog-js/docs/dl.html>
+* [davi]  Inference in Datalog; Ernest Davis, <http://cs.nyu.edu/faculty/davise/ai/datalog.html>
 * [gree]  Datalog and Recursive Query Processing; Todd J. Green, Shan Shan Huang, Boon Thau Loo and Wenchao Zhou
-            Foundations and Trends in Databases Vol. 5, No. 2 (2012) 105–195, 2013
-            http://blogs.evergreen.edu/sosw/files/2014/04/Green-Vol5-DBS-017.pdf
+            Foundations and Trends in Databases Vol. 5, No. 2 (2012) 105-95, 2013
+            <http://blogs.evergreen.edu/sosw/files/2014/04/Green-Vol5-DBS-017.pdf>
 * [bra2]  Bottom-Up Query Evaluation in Extended Deductive Databases, Stefan Brass, 1996
-            https://www.deutsche-digitale-bibliothek.de/binary/4ENXEC32EMXHKP7IRB6OKPBWSGJV5JMJ/full/1.pdf
+            <https://www.deutsche-digitale-bibliothek.de/binary/4ENXEC32EMXHKP7IRB6OKPBWSGJV5JMJ/full/1.pdf>
 * [sund]  Datalog Evaluation Algorithms, Dr. Raj Sunderraman, 1998
-            http://tinman.cs.gsu.edu/~raj/8710/f98/alg.html
+            <http://tinman.cs.gsu.edu/~raj/8710/f98/alg.html>
 * [ull1]  Lecture notes: Datalog Rules Programs Negation; Jeffrey D. Ullman;
-            http://infolab.stanford.edu/~ullman/cs345notes/cs345-1.ppt
+            <http://infolab.stanford.edu/~ullman/cs345notes/cs345-1.ppt>
 * [ull2]  Lecture notes: Datalog Logical Rules Recursion; Jeffrey D. Ullman;
-            http://infolab.stanford.edu/~ullman/dscb/pslides/dlog.ppt
-* [meye]  Prolog in Python, Chris Meyers, http://www.openbookproject.net/py4fun/prolog/intro.html
+            <http://infolab.stanford.edu/~ullman/dscb/pslides/dlog.ppt>
+* [meye]  Prolog in Python, Chris Meyers, <http://www.openbookproject.net/py4fun/prolog/intro.html>
 * [alec]  G53RDB Theory of Relational Databases Lecture 14; Natasha Alechina;
-            http://www.cs.nott.ac.uk/~psznza/G53RDB07/rdb14.pdf
-* [rack]  Datalog: Deductive Database Programming, Jay McCarthy, https://docs.racket-lang.org/datalog/
+            <http://www.cs.nott.ac.uk/~psznza/G53RDB07/rdb14.pdf>
+* [rack]  Datalog: Deductive Database Programming, Jay McCarthy, <https://docs.racket-lang.org/datalog/>
             (Datalog library for the Racket language)
 
 ## Ideas and Notes
 
-*Just some thoughts on how the system is currently implemented and how it can be improved in the future*
+_Just some thoughts on how the system is currently implemented and how it can be improved in the future_
 
 ----
 

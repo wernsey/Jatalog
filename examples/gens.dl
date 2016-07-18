@@ -1,0 +1,1341 @@
+% More complicated family tree example
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- ancestor(X, Z), parent(Z, Y).
+married(M,O):- married(O,M).
+child(X,Y) :- parent(Y,X).
+child(f65, C)?
+sibling(X,Y) :- parent(X, P), parent(Y, P), X <> Y.
+cousin(X,Y) :- parent(X, P1), parent(Y, P2), sibling(P1, P2).
+%cousin(m76, C)?
+%ancestor(m64, A)?
+
+married(f01, m02).
+male(m10).
+parent(m10, m02).
+parent(m10, f01).
+female(f11).
+parent(f11, m02).
+parent(f11, f01).
+married(f03, m04).
+male(m12).
+parent(m12, m04).
+parent(m12, f03).
+female(f13).
+parent(f13, m04).
+parent(f13, f03).
+married(f05, m06).
+male(m14).
+parent(m14, m06).
+parent(m14, f05).
+female(f15).
+parent(f15, m06).
+parent(f15, f05).
+married(f07, m08).
+male(m16).
+parent(m16, m08).
+parent(m16, f07).
+female(f17).
+parent(f17, m08).
+parent(f17, f07).
+married(f09, m010).
+male(m18).
+parent(m18, m010).
+parent(m18, f09).
+female(f19).
+parent(f19, m010).
+parent(f19, f09).
+married(f011, m012).
+male(m110).
+parent(m110, m012).
+parent(m110, f011).
+female(f111).
+parent(f111, m012).
+parent(f111, f011).
+married(f013, m014).
+male(m112).
+parent(m112, m014).
+parent(m112, f013).
+female(f113).
+parent(f113, m014).
+parent(f113, f013).
+married(f015, m016).
+male(m114).
+parent(m114, m016).
+parent(m114, f015).
+female(f115).
+parent(f115, m016).
+parent(f115, f015).
+married(f017, m018).
+male(m116).
+parent(m116, m018).
+parent(m116, f017).
+female(f117).
+parent(f117, m018).
+parent(f117, f017).
+married(f019, m00).
+male(m118).
+parent(m118, m00).
+parent(m118, f019).
+female(f119).
+parent(f119, m00).
+parent(f119, f019).
+married(m12, f13).
+male(m20).
+parent(m20, f13).
+parent(m20, m12).
+female(f21).
+parent(f21, f13).
+parent(f21, m12).
+married(m14, f15).
+male(m22).
+parent(m22, f15).
+parent(m22, m14).
+female(f23).
+parent(f23, f15).
+parent(f23, m14).
+married(m16, f17).
+male(m24).
+parent(m24, f17).
+parent(m24, m16).
+female(f25).
+parent(f25, f17).
+parent(f25, m16).
+married(m18, f19).
+male(m26).
+parent(m26, f19).
+parent(m26, m18).
+female(f27).
+parent(f27, f19).
+parent(f27, m18).
+married(m110, f111).
+male(m28).
+parent(m28, f111).
+parent(m28, m110).
+female(f29).
+parent(f29, f111).
+parent(f29, m110).
+married(m112, f113).
+male(m210).
+parent(m210, f113).
+parent(m210, m112).
+female(f211).
+parent(f211, f113).
+parent(f211, m112).
+married(m114, f115).
+male(m212).
+parent(m212, f115).
+parent(m212, m114).
+female(f213).
+parent(f213, f115).
+parent(f213, m114).
+married(m116, f117).
+male(m214).
+parent(m214, f117).
+parent(m214, m116).
+female(f215).
+parent(f215, f117).
+parent(f215, m116).
+married(m118, f119).
+male(m216).
+parent(m216, f119).
+parent(m216, m118).
+female(f217).
+parent(f217, f119).
+parent(f217, m118).
+married(m10, f11).
+male(m218).
+parent(m218, f11).
+parent(m218, m10).
+female(f219).
+parent(f219, f11).
+parent(f219, m10).
+married(f23, m24).
+male(m30).
+parent(m30, m24).
+parent(m30, f23).
+female(f31).
+parent(f31, m24).
+parent(f31, f23).
+married(f25, m26).
+male(m32).
+parent(m32, m26).
+parent(m32, f25).
+female(f33).
+parent(f33, m26).
+parent(f33, f25).
+married(f27, m28).
+male(m34).
+parent(m34, m28).
+parent(m34, f27).
+female(f35).
+parent(f35, m28).
+parent(f35, f27).
+married(f29, m210).
+male(m36).
+parent(m36, m210).
+parent(m36, f29).
+female(f37).
+parent(f37, m210).
+parent(f37, f29).
+married(f211, m212).
+male(m38).
+parent(m38, m212).
+parent(m38, f211).
+female(f39).
+parent(f39, m212).
+parent(f39, f211).
+married(f213, m214).
+male(m310).
+parent(m310, m214).
+parent(m310, f213).
+female(f311).
+parent(f311, m214).
+parent(f311, f213).
+married(f215, m216).
+male(m312).
+parent(m312, m216).
+parent(m312, f215).
+female(f313).
+parent(f313, m216).
+parent(f313, f215).
+married(f217, m218).
+male(m314).
+parent(m314, m218).
+parent(m314, f217).
+female(f315).
+parent(f315, m218).
+parent(f315, f217).
+married(f219, m20).
+male(m316).
+parent(m316, m20).
+parent(m316, f219).
+female(f317).
+parent(f317, m20).
+parent(f317, f219).
+married(f21, m22).
+male(m318).
+parent(m318, m22).
+parent(m318, f21).
+female(f319).
+parent(f319, m22).
+parent(f319, f21).
+married(m34, f35).
+male(m40).
+parent(m40, f35).
+parent(m40, m34).
+female(f41).
+parent(f41, f35).
+parent(f41, m34).
+married(m36, f37).
+male(m42).
+parent(m42, f37).
+parent(m42, m36).
+female(f43).
+parent(f43, f37).
+parent(f43, m36).
+married(m38, f39).
+male(m44).
+parent(m44, f39).
+parent(m44, m38).
+female(f45).
+parent(f45, f39).
+parent(f45, m38).
+married(m310, f311).
+male(m46).
+parent(m46, f311).
+parent(m46, m310).
+female(f47).
+parent(f47, f311).
+parent(f47, m310).
+married(m312, f313).
+male(m48).
+parent(m48, f313).
+parent(m48, m312).
+female(f49).
+parent(f49, f313).
+parent(f49, m312).
+married(m314, f315).
+male(m410).
+parent(m410, f315).
+parent(m410, m314).
+female(f411).
+parent(f411, f315).
+parent(f411, m314).
+married(m316, f317).
+male(m412).
+parent(m412, f317).
+parent(m412, m316).
+female(f413).
+parent(f413, f317).
+parent(f413, m316).
+married(m318, f319).
+male(m414).
+parent(m414, f319).
+parent(m414, m318).
+female(f415).
+parent(f415, f319).
+parent(f415, m318).
+married(m30, f31).
+male(m416).
+parent(m416, f31).
+parent(m416, m30).
+female(f417).
+parent(f417, f31).
+parent(f417, m30).
+married(m32, f33).
+male(m418).
+parent(m418, f33).
+parent(m418, m32).
+female(f419).
+parent(f419, f33).
+parent(f419, m32).
+married(f45, m46).
+male(m50).
+parent(m50, m46).
+parent(m50, f45).
+female(f51).
+parent(f51, m46).
+parent(f51, f45).
+married(f47, m48).
+male(m52).
+parent(m52, m48).
+parent(m52, f47).
+female(f53).
+parent(f53, m48).
+parent(f53, f47).
+married(f49, m410).
+male(m54).
+parent(m54, m410).
+parent(m54, f49).
+female(f55).
+parent(f55, m410).
+parent(f55, f49).
+married(f411, m412).
+male(m56).
+parent(m56, m412).
+parent(m56, f411).
+female(f57).
+parent(f57, m412).
+parent(f57, f411).
+married(f413, m414).
+male(m58).
+parent(m58, m414).
+parent(m58, f413).
+female(f59).
+parent(f59, m414).
+parent(f59, f413).
+married(f415, m416).
+male(m510).
+parent(m510, m416).
+parent(m510, f415).
+female(f511).
+parent(f511, m416).
+parent(f511, f415).
+married(f417, m418).
+male(m512).
+parent(m512, m418).
+parent(m512, f417).
+female(f513).
+parent(f513, m418).
+parent(f513, f417).
+married(f419, m40).
+male(m514).
+parent(m514, m40).
+parent(m514, f419).
+female(f515).
+parent(f515, m40).
+parent(f515, f419).
+married(f41, m42).
+male(m516).
+parent(m516, m42).
+parent(m516, f41).
+female(f517).
+parent(f517, m42).
+parent(f517, f41).
+married(f43, m44).
+male(m518).
+parent(m518, m44).
+parent(m518, f43).
+female(f519).
+parent(f519, m44).
+parent(f519, f43).
+married(m56, f57).
+male(m60).
+parent(m60, f57).
+parent(m60, m56).
+female(f61).
+parent(f61, f57).
+parent(f61, m56).
+married(m58, f59).
+male(m62).
+parent(m62, f59).
+parent(m62, m58).
+female(f63).
+parent(f63, f59).
+parent(f63, m58).
+married(m510, f511).
+male(m64).
+parent(m64, f511).
+parent(m64, m510).
+female(f65).
+parent(f65, f511).
+parent(f65, m510).
+married(m512, f513).
+male(m66).
+parent(m66, f513).
+parent(m66, m512).
+female(f67).
+parent(f67, f513).
+parent(f67, m512).
+married(m514, f515).
+male(m68).
+parent(m68, f515).
+parent(m68, m514).
+female(f69).
+parent(f69, f515).
+parent(f69, m514).
+married(m516, f517).
+male(m610).
+parent(m610, f517).
+parent(m610, m516).
+female(f611).
+parent(f611, f517).
+parent(f611, m516).
+married(m518, f519).
+male(m612).
+parent(m612, f519).
+parent(m612, m518).
+female(f613).
+parent(f613, f519).
+parent(f613, m518).
+married(m50, f51).
+male(m614).
+parent(m614, f51).
+parent(m614, m50).
+female(f615).
+parent(f615, f51).
+parent(f615, m50).
+married(m52, f53).
+male(m616).
+parent(m616, f53).
+parent(m616, m52).
+female(f617).
+parent(f617, f53).
+parent(f617, m52).
+married(m54, f55).
+male(m618).
+parent(m618, f55).
+parent(m618, m54).
+female(f619).
+parent(f619, f55).
+parent(f619, m54).
+married(f67, m68).
+male(m70).
+parent(m70, m68).
+parent(m70, f67).
+female(f71).
+parent(f71, m68).
+parent(f71, f67).
+married(f69, m610).
+male(m72).
+parent(m72, m610).
+parent(m72, f69).
+female(f73).
+parent(f73, m610).
+parent(f73, f69).
+married(f611, m612).
+male(m74).
+parent(m74, m612).
+parent(m74, f611).
+female(f75).
+parent(f75, m612).
+parent(f75, f611).
+married(f613, m614).
+male(m76).
+parent(m76, m614).
+parent(m76, f613).
+female(f77).
+parent(f77, m614).
+parent(f77, f613).
+married(f615, m616).
+male(m78).
+parent(m78, m616).
+parent(m78, f615).
+female(f79).
+parent(f79, m616).
+parent(f79, f615).
+married(f617, m618).
+male(m710).
+parent(m710, m618).
+parent(m710, f617).
+female(f711).
+parent(f711, m618).
+parent(f711, f617).
+married(f619, m60).
+male(m712).
+parent(m712, m60).
+parent(m712, f619).
+female(f713).
+parent(f713, m60).
+parent(f713, f619).
+married(f61, m62).
+male(m714).
+parent(m714, m62).
+parent(m714, f61).
+female(f715).
+parent(f715, m62).
+parent(f715, f61).
+married(f63, m64).
+male(m716).
+parent(m716, m64).
+parent(m716, f63).
+female(f717).
+parent(f717, m64).
+parent(f717, f63).
+married(f65, m66).
+male(m718).
+parent(m718, m66).
+parent(m718, f65).
+female(f719).
+parent(f719, m66).
+parent(f719, f65).
+married(m78, f79).
+male(m80).
+parent(m80, f79).
+parent(m80, m78).
+female(f81).
+parent(f81, f79).
+parent(f81, m78).
+married(m710, f711).
+male(m82).
+parent(m82, f711).
+parent(m82, m710).
+female(f83).
+parent(f83, f711).
+parent(f83, m710).
+married(m712, f713).
+male(m84).
+parent(m84, f713).
+parent(m84, m712).
+female(f85).
+parent(f85, f713).
+parent(f85, m712).
+married(m714, f715).
+male(m86).
+parent(m86, f715).
+parent(m86, m714).
+female(f87).
+parent(f87, f715).
+parent(f87, m714).
+married(m716, f717).
+male(m88).
+parent(m88, f717).
+parent(m88, m716).
+female(f89).
+parent(f89, f717).
+parent(f89, m716).
+married(m718, f719).
+male(m810).
+parent(m810, f719).
+parent(m810, m718).
+female(f811).
+parent(f811, f719).
+parent(f811, m718).
+married(m70, f71).
+male(m812).
+parent(m812, f71).
+parent(m812, m70).
+female(f813).
+parent(f813, f71).
+parent(f813, m70).
+married(m72, f73).
+male(m814).
+parent(m814, f73).
+parent(m814, m72).
+female(f815).
+parent(f815, f73).
+parent(f815, m72).
+married(m74, f75).
+male(m816).
+parent(m816, f75).
+parent(m816, m74).
+female(f817).
+parent(f817, f75).
+parent(f817, m74).
+married(m76, f77).
+male(m818).
+parent(m818, f77).
+parent(m818, m76).
+female(f819).
+parent(f819, f77).
+parent(f819, m76).
+married(f89, m810).
+male(m90).
+parent(m90, m810).
+parent(m90, f89).
+female(f91).
+parent(f91, m810).
+parent(f91, f89).
+married(f811, m812).
+male(m92).
+parent(m92, m812).
+parent(m92, f811).
+female(f93).
+parent(f93, m812).
+parent(f93, f811).
+married(f813, m814).
+male(m94).
+parent(m94, m814).
+parent(m94, f813).
+female(f95).
+parent(f95, m814).
+parent(f95, f813).
+married(f815, m816).
+male(m96).
+parent(m96, m816).
+parent(m96, f815).
+female(f97).
+parent(f97, m816).
+parent(f97, f815).
+married(f817, m818).
+male(m98).
+parent(m98, m818).
+parent(m98, f817).
+female(f99).
+parent(f99, m818).
+parent(f99, f817).
+married(f819, m80).
+male(m910).
+parent(m910, m80).
+parent(m910, f819).
+female(f911).
+parent(f911, m80).
+parent(f911, f819).
+married(f81, m82).
+male(m912).
+parent(m912, m82).
+parent(m912, f81).
+female(f913).
+parent(f913, m82).
+parent(f913, f81).
+married(f83, m84).
+male(m914).
+parent(m914, m84).
+parent(m914, f83).
+female(f915).
+parent(f915, m84).
+parent(f915, f83).
+married(f85, m86).
+male(m916).
+parent(m916, m86).
+parent(m916, f85).
+female(f917).
+parent(f917, m86).
+parent(f917, f85).
+married(f87, m88).
+male(m918).
+parent(m918, m88).
+parent(m918, f87).
+female(f919).
+parent(f919, m88).
+parent(f919, f87).
+married(m910, f911).
+male(m100).
+parent(m100, f911).
+parent(m100, m910).
+female(f101).
+parent(f101, f911).
+parent(f101, m910).
+married(m912, f913).
+male(m102).
+parent(m102, f913).
+parent(m102, m912).
+female(f103).
+parent(f103, f913).
+parent(f103, m912).
+married(m914, f915).
+male(m104).
+parent(m104, f915).
+parent(m104, m914).
+female(f105).
+parent(f105, f915).
+parent(f105, m914).
+married(m916, f917).
+male(m106).
+parent(m106, f917).
+parent(m106, m916).
+female(f107).
+parent(f107, f917).
+parent(f107, m916).
+married(m918, f919).
+male(m108).
+parent(m108, f919).
+parent(m108, m918).
+female(f109).
+parent(f109, f919).
+parent(f109, m918).
+married(m90, f91).
+male(m1010).
+parent(m1010, f91).
+parent(m1010, m90).
+female(f1011).
+parent(f1011, f91).
+parent(f1011, m90).
+married(m92, f93).
+male(m1012).
+parent(m1012, f93).
+parent(m1012, m92).
+female(f1013).
+parent(f1013, f93).
+parent(f1013, m92).
+married(m94, f95).
+male(m1014).
+parent(m1014, f95).
+parent(m1014, m94).
+female(f1015).
+parent(f1015, f95).
+parent(f1015, m94).
+married(m96, f97).
+male(m1016).
+parent(m1016, f97).
+parent(m1016, m96).
+female(f1017).
+parent(f1017, f97).
+parent(f1017, m96).
+married(m98, f99).
+male(m1018).
+parent(m1018, f99).
+parent(m1018, m98).
+female(f1019).
+parent(f1019, f99).
+parent(f1019, m98).
+married(f1011, m1012).
+male(m110).
+parent(m110, m1012).
+parent(m110, f1011).
+female(f111).
+parent(f111, m1012).
+parent(f111, f1011).
+married(f1013, m1014).
+male(m112).
+parent(m112, m1014).
+parent(m112, f1013).
+female(f113).
+parent(f113, m1014).
+parent(f113, f1013).
+married(f1015, m1016).
+male(m114).
+parent(m114, m1016).
+parent(m114, f1015).
+female(f115).
+parent(f115, m1016).
+parent(f115, f1015).
+married(f1017, m1018).
+male(m116).
+parent(m116, m1018).
+parent(m116, f1017).
+female(f117).
+parent(f117, m1018).
+parent(f117, f1017).
+married(f1019, m100).
+male(m118).
+parent(m118, m100).
+parent(m118, f1019).
+female(f119).
+parent(f119, m100).
+parent(f119, f1019).
+married(f101, m102).
+male(m1110).
+parent(m1110, m102).
+parent(m1110, f101).
+female(f1111).
+parent(f1111, m102).
+parent(f1111, f101).
+married(f103, m104).
+male(m1112).
+parent(m1112, m104).
+parent(m1112, f103).
+female(f1113).
+parent(f1113, m104).
+parent(f1113, f103).
+married(f105, m106).
+male(m1114).
+parent(m1114, m106).
+parent(m1114, f105).
+female(f1115).
+parent(f1115, m106).
+parent(f1115, f105).
+married(f107, m108).
+male(m1116).
+parent(m1116, m108).
+parent(m1116, f107).
+female(f1117).
+parent(f1117, m108).
+parent(f1117, f107).
+married(f109, m1010).
+male(m1118).
+parent(m1118, m1010).
+parent(m1118, f109).
+female(f1119).
+parent(f1119, m1010).
+parent(f1119, f109).
+married(m1112, f1113).
+male(m120).
+parent(m120, f1113).
+parent(m120, m1112).
+female(f121).
+parent(f121, f1113).
+parent(f121, m1112).
+married(m1114, f1115).
+male(m122).
+parent(m122, f1115).
+parent(m122, m1114).
+female(f123).
+parent(f123, f1115).
+parent(f123, m1114).
+married(m1116, f1117).
+male(m124).
+parent(m124, f1117).
+parent(m124, m1116).
+female(f125).
+parent(f125, f1117).
+parent(f125, m1116).
+married(m1118, f1119).
+male(m126).
+parent(m126, f1119).
+parent(m126, m1118).
+female(f127).
+parent(f127, f1119).
+parent(f127, m1118).
+married(m110, f111).
+male(m128).
+parent(m128, f111).
+parent(m128, m110).
+female(f129).
+parent(f129, f111).
+parent(f129, m110).
+married(m112, f113).
+male(m1210).
+parent(m1210, f113).
+parent(m1210, m112).
+female(f1211).
+parent(f1211, f113).
+parent(f1211, m112).
+married(m114, f115).
+male(m1212).
+parent(m1212, f115).
+parent(m1212, m114).
+female(f1213).
+parent(f1213, f115).
+parent(f1213, m114).
+married(m116, f117).
+male(m1214).
+parent(m1214, f117).
+parent(m1214, m116).
+female(f1215).
+parent(f1215, f117).
+parent(f1215, m116).
+married(m118, f119).
+male(m1216).
+parent(m1216, f119).
+parent(m1216, m118).
+female(f1217).
+parent(f1217, f119).
+parent(f1217, m118).
+married(m1110, f1111).
+male(m1218).
+parent(m1218, f1111).
+parent(m1218, m1110).
+female(f1219).
+parent(f1219, f1111).
+parent(f1219, m1110).
+married(f1213, m1214).
+male(m130).
+parent(m130, m1214).
+parent(m130, f1213).
+female(f131).
+parent(f131, m1214).
+parent(f131, f1213).
+married(f1215, m1216).
+male(m132).
+parent(m132, m1216).
+parent(m132, f1215).
+female(f133).
+parent(f133, m1216).
+parent(f133, f1215).
+married(f1217, m1218).
+male(m134).
+parent(m134, m1218).
+parent(m134, f1217).
+female(f135).
+parent(f135, m1218).
+parent(f135, f1217).
+married(f1219, m120).
+male(m136).
+parent(m136, m120).
+parent(m136, f1219).
+female(f137).
+parent(f137, m120).
+parent(f137, f1219).
+married(f121, m122).
+male(m138).
+parent(m138, m122).
+parent(m138, f121).
+female(f139).
+parent(f139, m122).
+parent(f139, f121).
+married(f123, m124).
+male(m1310).
+parent(m1310, m124).
+parent(m1310, f123).
+female(f1311).
+parent(f1311, m124).
+parent(f1311, f123).
+married(f125, m126).
+male(m1312).
+parent(m1312, m126).
+parent(m1312, f125).
+female(f1313).
+parent(f1313, m126).
+parent(f1313, f125).
+married(f127, m128).
+male(m1314).
+parent(m1314, m128).
+parent(m1314, f127).
+female(f1315).
+parent(f1315, m128).
+parent(f1315, f127).
+married(f129, m1210).
+male(m1316).
+parent(m1316, m1210).
+parent(m1316, f129).
+female(f1317).
+parent(f1317, m1210).
+parent(f1317, f129).
+married(f1211, m1212).
+male(m1318).
+parent(m1318, m1212).
+parent(m1318, f1211).
+female(f1319).
+parent(f1319, m1212).
+parent(f1319, f1211).
+married(m1314, f1315).
+male(m140).
+parent(m140, f1315).
+parent(m140, m1314).
+female(f141).
+parent(f141, f1315).
+parent(f141, m1314).
+married(m1316, f1317).
+male(m142).
+parent(m142, f1317).
+parent(m142, m1316).
+female(f143).
+parent(f143, f1317).
+parent(f143, m1316).
+married(m1318, f1319).
+male(m144).
+parent(m144, f1319).
+parent(m144, m1318).
+female(f145).
+parent(f145, f1319).
+parent(f145, m1318).
+married(m130, f131).
+male(m146).
+parent(m146, f131).
+parent(m146, m130).
+female(f147).
+parent(f147, f131).
+parent(f147, m130).
+married(m132, f133).
+male(m148).
+parent(m148, f133).
+parent(m148, m132).
+female(f149).
+parent(f149, f133).
+parent(f149, m132).
+married(m134, f135).
+male(m1410).
+parent(m1410, f135).
+parent(m1410, m134).
+female(f1411).
+parent(f1411, f135).
+parent(f1411, m134).
+married(m136, f137).
+male(m1412).
+parent(m1412, f137).
+parent(m1412, m136).
+female(f1413).
+parent(f1413, f137).
+parent(f1413, m136).
+married(m138, f139).
+male(m1414).
+parent(m1414, f139).
+parent(m1414, m138).
+female(f1415).
+parent(f1415, f139).
+parent(f1415, m138).
+married(m1310, f1311).
+male(m1416).
+parent(m1416, f1311).
+parent(m1416, m1310).
+female(f1417).
+parent(f1417, f1311).
+parent(f1417, m1310).
+married(m1312, f1313).
+male(m1418).
+parent(m1418, f1313).
+parent(m1418, m1312).
+female(f1419).
+parent(f1419, f1313).
+parent(f1419, m1312).
+married(f1415, m1416).
+male(m150).
+parent(m150, m1416).
+parent(m150, f1415).
+female(f151).
+parent(f151, m1416).
+parent(f151, f1415).
+married(f1417, m1418).
+male(m152).
+parent(m152, m1418).
+parent(m152, f1417).
+female(f153).
+parent(f153, m1418).
+parent(f153, f1417).
+married(f1419, m140).
+male(m154).
+parent(m154, m140).
+parent(m154, f1419).
+female(f155).
+parent(f155, m140).
+parent(f155, f1419).
+married(f141, m142).
+male(m156).
+parent(m156, m142).
+parent(m156, f141).
+female(f157).
+parent(f157, m142).
+parent(f157, f141).
+married(f143, m144).
+male(m158).
+parent(m158, m144).
+parent(m158, f143).
+female(f159).
+parent(f159, m144).
+parent(f159, f143).
+married(f145, m146).
+male(m1510).
+parent(m1510, m146).
+parent(m1510, f145).
+female(f1511).
+parent(f1511, m146).
+parent(f1511, f145).
+married(f147, m148).
+male(m1512).
+parent(m1512, m148).
+parent(m1512, f147).
+female(f1513).
+parent(f1513, m148).
+parent(f1513, f147).
+married(f149, m1410).
+male(m1514).
+parent(m1514, m1410).
+parent(m1514, f149).
+female(f1515).
+parent(f1515, m1410).
+parent(f1515, f149).
+married(f1411, m1412).
+male(m1516).
+parent(m1516, m1412).
+parent(m1516, f1411).
+female(f1517).
+parent(f1517, m1412).
+parent(f1517, f1411).
+married(f1413, m1414).
+male(m1518).
+parent(m1518, m1414).
+parent(m1518, f1413).
+female(f1519).
+parent(f1519, m1414).
+parent(f1519, f1413).
+married(m1516, f1517).
+male(m160).
+parent(m160, f1517).
+parent(m160, m1516).
+female(f161).
+parent(f161, f1517).
+parent(f161, m1516).
+married(m1518, f1519).
+male(m162).
+parent(m162, f1519).
+parent(m162, m1518).
+female(f163).
+parent(f163, f1519).
+parent(f163, m1518).
+married(m150, f151).
+male(m164).
+parent(m164, f151).
+parent(m164, m150).
+female(f165).
+parent(f165, f151).
+parent(f165, m150).
+married(m152, f153).
+male(m166).
+parent(m166, f153).
+parent(m166, m152).
+female(f167).
+parent(f167, f153).
+parent(f167, m152).
+married(m154, f155).
+male(m168).
+parent(m168, f155).
+parent(m168, m154).
+female(f169).
+parent(f169, f155).
+parent(f169, m154).
+married(m156, f157).
+male(m1610).
+parent(m1610, f157).
+parent(m1610, m156).
+female(f1611).
+parent(f1611, f157).
+parent(f1611, m156).
+married(m158, f159).
+male(m1612).
+parent(m1612, f159).
+parent(m1612, m158).
+female(f1613).
+parent(f1613, f159).
+parent(f1613, m158).
+married(m1510, f1511).
+male(m1614).
+parent(m1614, f1511).
+parent(m1614, m1510).
+female(f1615).
+parent(f1615, f1511).
+parent(f1615, m1510).
+married(m1512, f1513).
+male(m1616).
+parent(m1616, f1513).
+parent(m1616, m1512).
+female(f1617).
+parent(f1617, f1513).
+parent(f1617, m1512).
+married(m1514, f1515).
+male(m1618).
+parent(m1618, f1515).
+parent(m1618, m1514).
+female(f1619).
+parent(f1619, f1515).
+parent(f1619, m1514).
+married(f1617, m1618).
+male(m170).
+parent(m170, m1618).
+parent(m170, f1617).
+female(f171).
+parent(f171, m1618).
+parent(f171, f1617).
+married(f1619, m160).
+male(m172).
+parent(m172, m160).
+parent(m172, f1619).
+female(f173).
+parent(f173, m160).
+parent(f173, f1619).
+married(f161, m162).
+male(m174).
+parent(m174, m162).
+parent(m174, f161).
+female(f175).
+parent(f175, m162).
+parent(f175, f161).
+married(f163, m164).
+male(m176).
+parent(m176, m164).
+parent(m176, f163).
+female(f177).
+parent(f177, m164).
+parent(f177, f163).
+married(f165, m166).
+male(m178).
+parent(m178, m166).
+parent(m178, f165).
+female(f179).
+parent(f179, m166).
+parent(f179, f165).
+married(f167, m168).
+male(m1710).
+parent(m1710, m168).
+parent(m1710, f167).
+female(f1711).
+parent(f1711, m168).
+parent(f1711, f167).
+married(f169, m1610).
+male(m1712).
+parent(m1712, m1610).
+parent(m1712, f169).
+female(f1713).
+parent(f1713, m1610).
+parent(f1713, f169).
+married(f1611, m1612).
+male(m1714).
+parent(m1714, m1612).
+parent(m1714, f1611).
+female(f1715).
+parent(f1715, m1612).
+parent(f1715, f1611).
+married(f1613, m1614).
+male(m1716).
+parent(m1716, m1614).
+parent(m1716, f1613).
+female(f1717).
+parent(f1717, m1614).
+parent(f1717, f1613).
+married(f1615, m1616).
+male(m1718).
+parent(m1718, m1616).
+parent(m1718, f1615).
+female(f1719).
+parent(f1719, m1616).
+parent(f1719, f1615).
+married(m1718, f1719).
+male(m180).
+parent(m180, f1719).
+parent(m180, m1718).
+female(f181).
+parent(f181, f1719).
+parent(f181, m1718).
+married(m170, f171).
+male(m182).
+parent(m182, f171).
+parent(m182, m170).
+female(f183).
+parent(f183, f171).
+parent(f183, m170).
+married(m172, f173).
+male(m184).
+parent(m184, f173).
+parent(m184, m172).
+female(f185).
+parent(f185, f173).
+parent(f185, m172).
+married(m174, f175).
+male(m186).
+parent(m186, f175).
+parent(m186, m174).
+female(f187).
+parent(f187, f175).
+parent(f187, m174).
+married(m176, f177).
+male(m188).
+parent(m188, f177).
+parent(m188, m176).
+female(f189).
+parent(f189, f177).
+parent(f189, m176).
+married(m178, f179).
+male(m1810).
+parent(m1810, f179).
+parent(m1810, m178).
+female(f1811).
+parent(f1811, f179).
+parent(f1811, m178).
+married(m1710, f1711).
+male(m1812).
+parent(m1812, f1711).
+parent(m1812, m1710).
+female(f1813).
+parent(f1813, f1711).
+parent(f1813, m1710).
+married(m1712, f1713).
+male(m1814).
+parent(m1814, f1713).
+parent(m1814, m1712).
+female(f1815).
+parent(f1815, f1713).
+parent(f1815, m1712).
+married(m1714, f1715).
+male(m1816).
+parent(m1816, f1715).
+parent(m1816, m1714).
+female(f1817).
+parent(f1817, f1715).
+parent(f1817, m1714).
+married(m1716, f1717).
+male(m1818).
+parent(m1818, f1717).
+parent(m1818, m1716).
+female(f1819).
+parent(f1819, f1717).
+parent(f1819, m1716).
+married(f1819, m180).
+male(m190).
+parent(m190, m180).
+parent(m190, f1819).
+female(f191).
+parent(f191, m180).
+parent(f191, f1819).
+married(f181, m182).
+male(m192).
+parent(m192, m182).
+parent(m192, f181).
+female(f193).
+parent(f193, m182).
+parent(f193, f181).
+married(f183, m184).
+male(m194).
+parent(m194, m184).
+parent(m194, f183).
+female(f195).
+parent(f195, m184).
+parent(f195, f183).
+married(f185, m186).
+male(m196).
+parent(m196, m186).
+parent(m196, f185).
+female(f197).
+parent(f197, m186).
+parent(f197, f185).
+married(f187, m188).
+male(m198).
+parent(m198, m188).
+parent(m198, f187).
+female(f199).
+parent(f199, m188).
+parent(f199, f187).
+married(f189, m1810).
+male(m1910).
+parent(m1910, m1810).
+parent(m1910, f189).
+female(f1911).
+parent(f1911, m1810).
+parent(f1911, f189).
+married(f1811, m1812).
+male(m1912).
+parent(m1912, m1812).
+parent(m1912, f1811).
+female(f1913).
+parent(f1913, m1812).
+parent(f1913, f1811).
+married(f1813, m1814).
+male(m1914).
+parent(m1914, m1814).
+parent(m1914, f1813).
+female(f1915).
+parent(f1915, m1814).
+parent(f1915, f1813).
+married(f1815, m1816).
+male(m1916).
+parent(m1916, m1816).
+parent(m1916, f1815).
+female(f1917).
+parent(f1917, m1816).
+parent(f1917, f1815).
+married(f1817, m1818).
+male(m1918).
+parent(m1918, m1818).
+parent(m1918, f1817).
+female(f1919).
+parent(f1919, m1818).
+parent(f1919, f1817).
