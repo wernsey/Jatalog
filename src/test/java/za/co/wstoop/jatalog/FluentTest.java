@@ -16,30 +16,11 @@ import za.co.wstoop.jatalog.statement.Statement;
 // TODO: Code coverage could be better... 
 public class FluentTest {
 
-	private Jatalog createDatabase() throws DatalogException {
-
-        Jatalog jatalog = new Jatalog();
-
-        jatalog.fact("parent", "a", "aa")
-            .fact("parent", "a", "ab")
-            .fact("parent", "aa", "aaa")
-            .fact("parent", "aa", "aab")
-            .fact("parent", "aaa", "aaaa")
-            .fact("parent", "c", "ca");
-
-		jatalog.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Z"), Expr.expr("ancestor", "Z", "Y"))
-				.rule(Expr.expr("ancestor", "X", "Y"), Expr.expr("parent", "X", "Y"))
-				.rule(Expr.expr("sibling", "X", "Y"), Expr.expr("parent", "Z", "X"), Expr.expr("parent", "Z", "Y"), Expr.ne("X", "Y"))
-				.rule(Expr.expr("related", "X", "Y"), Expr.expr("ancestor", "Z", "X"), Expr.expr("ancestor", "Z", "Y"));
-		
-		return jatalog;
-	}
-	
 	@Test
 	public void testApp() throws Exception {
 		//This is how you would use the fluent API:
         try {
-        	Jatalog jatalog = createDatabase();
+        	Jatalog jatalog = TestUtils.createDatabase();
 			jatalog.validate();
 			
             Collection<Map<String, String>> answers;
@@ -54,6 +35,12 @@ public class FluentTest {
 
             // Run a query "who are aa's descendants?"; print the answers
             answers = jatalog.query(Expr.expr("ancestor", "aa", "X"));
+            assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
+            assertTrue(TestUtils.answerContains(answers, "X", "aab"));
+            assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
+
+            // Alternative way to execute the statement:
+            answers = jatalog.executeAll("ancestor(aa, X)?");
             assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "X", "aab"));
             assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
@@ -73,6 +60,9 @@ public class FluentTest {
 
             // "who are aa's descendants now?"
             answers = jatalog.query(Expr.expr("ancestor", "aa", "X"));
+            assertFalse(answers.contains(Expr.expr("parent", "aa", "aaa")));
+            assertFalse(answers.contains(Expr.expr("parent", "aaa", "aaaa")));
+            assertTrue(TestUtils.answerContains(answers, "X", "aab"));
 
         } catch (DatalogException e) {
             e.printStackTrace();
@@ -84,19 +74,16 @@ public class FluentTest {
 		// This is how you would use the fluent API with variable bindings:
 		// They are inspired by JDBC prepared statements
 		try {
-			Jatalog jatalog = createDatabase();
+			Jatalog jatalog = TestUtils.createDatabase();
 			jatalog.validate();
 			
 			Statement statement = Jatalog.prepareStatement("sibling(A, B)?");
 			
 			//assertTrue(statement instanceof QueryStatement); // ugh - package private :(
-			//assertTrue(goals.size() == 1);
-			//assertTrue(goals.contains(new Expr("sibling", "A", "B")));
-			// TODO: Unit test of goal with more than one Expr, perhaps "sibling(A,B), A <> aaa"
 			
 			Map<String, String> bindings = Jatalog.makeBindings("A", "aaa", "X", "xxx");
 						
-			// Run a query "who are siblings (of `aaa`)?"; print the answers
+			// Run a query "who are siblings (of `aaa`)?"
 			Collection<Map<String, String>> answers;
             answers = statement.execute(jatalog, bindings);
 			assertTrue(answers != null);
@@ -106,6 +93,29 @@ public class FluentTest {
             assertTrue(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
             assertFalse(TestUtils.answerContains(answers, "A", "ab", "B", "aa"));
             assertFalse(TestUtils.answerContains(answers, "A", "aa", "B", "ab"));
+			
+		} catch (DatalogException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testMultiGoals() throws Exception {
+		// You can have multiple goals in queries.
+		try {
+			Jatalog jatalog = TestUtils.createDatabase();
+			jatalog.validate();
+
+			// Run a query "who are siblings A, and A is not `aaa`?"
+			Collection<Map<String, String>> answers;
+            answers = jatalog.executeAll("sibling(A, B), A <> aaa?");
+			assertTrue(answers != null);
+            
+            // Only aab is a sibling of aaa
+			assertTrue(TestUtils.answerContains(answers, "A", "aab", "B", "aaa"));
+            assertFalse(TestUtils.answerContains(answers, "A", "aaa", "B", "aab"));
+            assertTrue(TestUtils.answerContains(answers, "A", "ab", "B", "aa"));
+            assertTrue(TestUtils.answerContains(answers, "A", "aa", "B", "ab"));
 			
 		} catch (DatalogException e) {
 			e.printStackTrace();

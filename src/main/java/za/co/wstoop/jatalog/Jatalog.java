@@ -733,7 +733,6 @@ public class Jatalog {
         
     @Override
 	public String toString() {
-    	// TODO: Unit tests for toString() 
     	// The output of this method should be parseable again and produce an exact replica of the database
         StringBuilder sb = new StringBuilder("% Facts:\n");
         for(Expr fact : edbProvider.allFacts()) {
@@ -744,6 +743,34 @@ public class Jatalog {
             sb.append(rule).append(".\n");
         }
         return sb.toString();
+    }
+    
+    @Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Jatalog)) {
+			return false;
+		}
+		Jatalog that = ((Jatalog) obj);
+		if(this.idb.size() != that.idb.size()) {
+			return false;
+		}
+		for(Rule rule : idb) {
+			if(!that.idb.contains(rule))
+				return false;
+		}
+
+		Collection<Expr> theseFacts = this.edbProvider.allFacts();
+		Collection<Expr> thoseFacts = that.edbProvider.allFacts();
+		
+		if(theseFacts.size() != thoseFacts.size()) {
+			return false;
+		}
+		for(Expr fact : theseFacts) {
+			if(!thoseFacts.contains(fact))
+				return false;
+		}
+		
+		return true;
     }
 
     /**
