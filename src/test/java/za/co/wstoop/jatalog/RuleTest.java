@@ -139,7 +139,6 @@ public class RuleTest {
 		assertTrue(rule.toString().equals("p(A, B) :- q(A), q(B), A <> B"));
 	}
 	
-	
 	@Test
 	public void testSubstitute() throws DatalogException {
 		Rule rule = new Rule(new Expr("p", "A", "B"), new Expr("q", "A"), new Expr("q", "B"), new Expr("<>", "A", "B"));
@@ -147,7 +146,6 @@ public class RuleTest {
 		Map<String, String> bindings = new HashMap<>();
 		bindings.put("A", "aa");
 		Rule subsRule = rule.substitute(bindings);
-		System.out.println(subsRule);
 		assertTrue(subsRule.equals(new Rule(new Expr("p", "aa", "B"), new Expr("q", "aa"), new Expr("q", "B"), new Expr("<>", "aa", "B"))));
 		
 		// Original rule unchanged?

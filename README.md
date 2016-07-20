@@ -245,11 +245,13 @@ _Just some thoughts on how the system is currently implemented and how it can be
 ----
 
 There are opportunities to run some of the methods in parallel using the Java 8 Streams API (I'm thinking of the calls to 
-`expandStrata()` in `buildDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular).
+`expandStrata()` in `expandDatabase()` and the calls to `matchRule()` in `expandStrata()` in particular).
 
-I've now gone through the effort of removing the `DatalogException`s from `expandStrata()` on down to open the road for this
-implementation. `Expr#evalBuiltIn()` may throw a `RuntimeException` for one of a number of conditions which are supposed to be
-caught earlier, like in `Rule#validate()`.
+This is a bit more complicated than I thought it would be because
+
+1. `expandStrata()` would need a special `Collector` to collect new facts into the `IndexedSet`, and
+2. The `facts` parameter passed to `expandStrata()` from `expandDatabase()` is modified at the end of 
+   the loop in `expandStrata()`.
 
 I can use a method like this to make the type of stream configurable:
 

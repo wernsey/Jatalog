@@ -75,8 +75,6 @@ public class Jatalog {
 
 	private EdbProvider edbProvider;   // Facts
     private Collection<Rule> idb;      // Rules
-
-    private boolean useParallel = false;
     
     private Engine engine = new BasicEngine();
     
@@ -426,9 +424,6 @@ public class Jatalog {
 			if(!thoseFacts.contains(fact))
 				return false;
 		}
-
-		if(this.useParallel != that.useParallel)
-			return false;
 		
 		return true;
     }
@@ -452,25 +447,5 @@ public class Jatalog {
 	/* Only used for unit testing */
 	public Collection<Rule> getIdb() {
 		return idb;
-	}
-	
-	/**
-	 * Sets whether parallel <code>Stream</code>s will be used to evaluate queries.<br>
-	 * Sets whether or not the <code>Stream.parallelStream()</code> will be used to create streams.
-	 * The alternative is use <code>Stream.stream()</code>.
-	 * <em>Using parallel streams may speed up the performance of queries, but it is conceivable
-	 * that there may be cases where you might want to limit processing to a single thread.</em>
-	 * @param useParallel If true, parallel streams will be used.
-	 */
-	public void setUseParallel(boolean useParallel) {
-		this.useParallel = useParallel;
-	}
-	
-	/**
-	 * Checks whether parallel streams are used.
-	 * @return true if parallel streams are used
-	 */
-	public boolean isUseParallel() {
-		return useParallel;
 	}
 }

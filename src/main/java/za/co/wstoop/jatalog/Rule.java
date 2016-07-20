@@ -64,11 +64,11 @@ public class Rule {
 		Set<String> bodyVariables = new HashSet<String>();
 		for(Expr clause : getBody()) {
 			if (clause.isBuiltIn()) {
-				if (clause.terms.size() != 2)
-					throw new DatalogException("Operator " + clause.predicate + " must have only two operands");
-				String a = clause.terms.get(0);
-				String b = clause.terms.get(1);
-				if (clause.predicate.equals("=")) {
+				if (clause.getTerms().size() != 2)
+					throw new DatalogException("Operator " + clause.getPredicate() + " must have only two operands");
+				String a = clause.getTerms().get(0);
+				String b = clause.getTerms().get(1);
+				if (clause.getPredicate().equals("=")) {
 					if (Jatalog.isVariable(a) && Jatalog.isVariable(b) && !bodyVariables.contains(a)
 							&& !bodyVariables.contains(b)) {
 						throw new DatalogException("Both variables of '=' are unbound in clause " + a + " = " + b);
@@ -83,13 +83,13 @@ public class Rule {
 				}
 			} 
 			if(clause.isNegated()) {
-				for (String term : clause.terms) {
+				for (String term : clause.getTerms()) {
 					if (Jatalog.isVariable(term) && !bodyVariables.contains(term)) {
 						throw new DatalogException("Variable " + term + " of rule " + toString() + " must appear in at least one positive expression");
 					}
 				}
 			} else {
-				for (String term : clause.terms) {
+				for (String term : clause.getTerms()) {
 					if (Jatalog.isVariable(term)) {
 						bodyVariables.add(term);
 					}
@@ -98,7 +98,7 @@ public class Rule {
 		}
 		
 		// Enforce the rule that variables in the head must appear in the body
-		for (String term : getHead().terms) {
+		for (String term : getHead().getTerms()) {
 			if (!Jatalog.isVariable(term)) {
 				throw new DatalogException("Constant " + term + " in head of rule " + toString());
 			}

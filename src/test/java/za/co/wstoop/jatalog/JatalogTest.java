@@ -38,8 +38,6 @@ public class JatalogTest {
 			
 			Jatalog thatJatalog = new Jatalog();
 			thatJatalog.executeAll(string);
-			
-			thatJatalog.setUseParallel(thisJatalog.isUseParallel());
 						
 			assertTrue(thisJatalog != thatJatalog);
 			assertTrue(thisJatalog.equals(thatJatalog));

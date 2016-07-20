@@ -16,7 +16,7 @@ public class ExprTest {
 	@Test
 	public void testEquals() {
 		Expr e1 = new Expr("foo", "a", "b");
-		assertTrue(e1.predicate.equals("foo"));
+		assertTrue(e1.getPredicate().equals("foo"));
 		assertTrue(e1.arity() == 2);
 		assertFalse(e1.isNegated());
 		
@@ -131,14 +131,14 @@ public class ExprTest {
 		Map<String, String> bindings = new HashMap<String, String>();
 		bindings.put("X", "a");
 		Expr e2 = e1.substitute(bindings);
-		assertTrue(e2.terms.get(0).equals("a"));
-		assertTrue(e2.terms.get(1).equals("Y"));
+		assertTrue(e2.getTerms().get(0).equals("a"));
+		assertTrue(e2.getTerms().get(1).equals("Y"));
 		assertFalse(e2.isNegated());
 		
 		e1 = Expr.not("foo", "X", "Y");
 		e2 = e1.substitute(bindings);
-		assertTrue(e2.terms.get(0).equals("a"));
-		assertTrue(e2.terms.get(1).equals("Y"));
+		assertTrue(e2.getTerms().get(0).equals("a"));
+		assertTrue(e2.getTerms().get(1).equals("Y"));
 		assertTrue(e2.isNegated());
 	}
 
@@ -230,7 +230,7 @@ public class ExprTest {
 		
 		Map<String, String> bindings = new HashMap<String, String>();
 		Expr e1 = new Expr("!=", "X", "Y");
-		assertTrue(e1.predicate.equals("<>"));
+		assertTrue(e1.getPredicate().equals("<>"));
 		
 		bindings.put("X", "hello");
 		bindings.put("Y", "hello");		

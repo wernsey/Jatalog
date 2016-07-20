@@ -21,8 +21,8 @@ import za.co.wstoop.jatalog.engine.Indexable;
  */
 public class Expr implements Indexable<String> {
 
-    String predicate;
-    List<String> terms;
+    private String predicate;
+    private List<String> terms;
 
     protected boolean negated = false;
 
@@ -236,6 +236,10 @@ public class Expr implements Indexable<String> {
     
     public String getPredicate() {
 		return predicate;
+	}
+    
+    public List<String> getTerms() {
+		return terms;
 	}
 
     @Override
