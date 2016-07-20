@@ -2,6 +2,8 @@ package za.co.wstoop.jatalog;
 
 import java.util.Collection;
 
+import za.co.wstoop.jatalog.engine.IndexedSet;
+
 /**
  * Implementation of {@link EdbProvider} that wraps around an {@link IndexedSet}
  * for an in-memory EDB.

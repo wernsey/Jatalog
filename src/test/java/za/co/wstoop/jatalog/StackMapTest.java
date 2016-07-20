@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import za.co.wstoop.jatalog.DatalogException;
-import za.co.wstoop.jatalog.StackMap;
+import za.co.wstoop.jatalog.engine.StackMap;
 
 /*
  * I'm not too concerned to get 100% coverage for StackMap because it is

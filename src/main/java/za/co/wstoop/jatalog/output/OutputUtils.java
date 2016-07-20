@@ -1,9 +1,13 @@
-package za.co.wstoop.jatalog;
+package za.co.wstoop.jatalog.output;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import za.co.wstoop.jatalog.Expr;
+import za.co.wstoop.jatalog.Jatalog;
+import za.co.wstoop.jatalog.Rule;
 
 /**
  * Utilities for processing {@link Jatalog}'s output.

@@ -1,4 +1,4 @@
-package za.co.wstoop.jatalog;
+package za.co.wstoop.jatalog.engine;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,8 +12,8 @@ import java.util.Set;
  * to the parent map rather than copying it. It never modifies the parent map. (If the behaviour deviates from this, it is a bug 
  * and must be fixed).
  * </p><p>
- * Internally, it has two maps: {@code self} and {@code parent}. The {@link #get()} method will look up a key in self and if it doesn't find it, looks
- * for it in {@code parent}. The {@link #put()} method always adds values to {@code self}. The parent in turn may also be a StackMap, so some method
+ * Internally, it has two maps: {@code self} and {@code parent}. The {@link #get(Object)} method will look up a key in self and if it doesn't find it, looks
+ * for it in {@code parent}. The {@link #put(Object, Object)} method always adds values to {@code self}. The parent in turn may also be a StackMap, so some method
  * calls may be recursive. The {@link #flatten()} method combines the map with its parents into a single one.
  * </p><p>
  * It is used by Jatalog for the scoped contexts where the variable bindings enter and leave scope frequently during the
@@ -23,16 +23,16 @@ import java.util.Set;
  * by the Map&lt;&gt;. Therefore, their implementations here will flatten the map first. Once these methods are called StackMap just
  * becomes a wrapper around the internal HashMap, hence Jatalog avoids these methods internally.
  * </p><p>
- * The {@link #remove()} method also flattens {@code this} to avoid modifying the parent while and the {@link #clear()} method just sets parent to null
+ * The {@link #remove(Object)} method also flattens {@code this} to avoid modifying the parent while and the {@link #clear()} method just sets parent to null
  * and clears {@code self}.
  * </p><p>
  * I initially just assumed that using the StackMap would be faster, so I tried an implementation with a {@link HashMap} where I just did a
  * {@code newMap.putAll(parent)} and removed the StackMap entirely. My rough benchmarks showed the StackMap-based implementation to be about 30%
  * faster than the alternative.
- * I've also tried a version that extends {@link AbstractMap}, but it proved to be significantly slower.
+ * I've also tried a version that extends {@link java.util.AbstractMap}, but it proved to be significantly slower.
  * </p>
  */
-class StackMap<K,V> implements Map<K,V> {
+public class StackMap<K,V> implements Map<K,V> {
     private Map<K,V> self;
     private Map<K,V> parent;
 
@@ -47,10 +47,10 @@ class StackMap<K,V> implements Map<K,V> {
     }
 
     /**
-     * Returns a new Map&lt;K,V&gt> that contains all the elements of this map,
+     * Returns a new Map&lt;K,V&gt; that contains all the elements of this map,
      * but does not have a parent anymore.
      * The returned map is actually a {@code java.util.HashMap}.
-     * @return
+     * @return a new flattened Map.
      */
     public Map<K,V> flatten() {
         Map<K,V> map = new HashMap<K,V>();

@@ -1,9 +1,10 @@
-package za.co.wstoop.jatalog;
+package za.co.wstoop.jatalog.output;
 
 import java.io.Reader;
 import java.util.Collection;
 import java.util.Map;
 
+import za.co.wstoop.jatalog.Jatalog;
 import za.co.wstoop.jatalog.statement.Statement;
 
 /**

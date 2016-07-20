@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import za.co.wstoop.jatalog.engine.Indexable;
+
 /**
  * Represents a Datalog literal expression.
  * <p>
@@ -100,7 +102,7 @@ public class Expr implements Indexable<String> {
      * @param bindings The bindings of variables to values after unification
      * @return true if the expressions unify.
      */
-    boolean unify(Expr that, Map<String, String> bindings) {
+    public boolean unify(Expr that, Map<String, String> bindings) {
         if(!this.predicate.equals(that.predicate) || this.arity() != that.arity()) {
             return false;
         }
@@ -154,10 +156,10 @@ public class Expr implements Indexable<String> {
 
     /**
      * Evaluates a built-in predicate. 
-     * @param bindings 
+     * @param bindings A map of variable bindings 
      * @return true if the operator matched.
      */
-    boolean evalBuiltIn(Map<String, String> bindings) {
+    public boolean evalBuiltIn(Map<String, String> bindings) {
     	// This method may throw a RuntimeException for a variety of possible reasons, but 
     	// these conditions are supposed to have been caught earlier in the chain by 
     	// methods such as Rule#validate().
@@ -231,6 +233,10 @@ public class Expr implements Indexable<String> {
         }
         throw new RuntimeException("Unimplemented built-in predicate " + predicate);
     }
+    
+    public String getPredicate() {
+		return predicate;
+	}
 
     @Override
     public boolean equals(Object other) {

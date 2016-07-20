@@ -3,7 +3,7 @@ package za.co.wstoop.jatalog;
 import org.junit.Test;
 
 import za.co.wstoop.jatalog.Expr;
-import za.co.wstoop.jatalog.IndexedSet;
+import za.co.wstoop.jatalog.engine.IndexedSet;
 
 import java.util.HashSet;
 import java.util.Set;

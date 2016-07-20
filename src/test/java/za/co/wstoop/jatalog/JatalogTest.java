@@ -8,7 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Basic unit tests.
-     */
+ */
 public class JatalogTest {
 	
 	@Test
@@ -38,6 +38,8 @@ public class JatalogTest {
 			
 			Jatalog thatJatalog = new Jatalog();
 			thatJatalog.executeAll(string);
+			
+			thatJatalog.setUseParallel(thisJatalog.isUseParallel());
 						
 			assertTrue(thisJatalog != thatJatalog);
 			assertTrue(thisJatalog.equals(thatJatalog));
@@ -45,5 +47,5 @@ public class JatalogTest {
 		} catch (DatalogException e) {
 			e.printStackTrace();
 		}
-    }
+	}
 }

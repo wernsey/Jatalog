@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import za.co.wstoop.jatalog.engine.Engine;
+
 /**
  * Class that represents a Datalog rule.
  * A rule has a head that is an expression and a body that is a list of expressions.
@@ -15,8 +17,8 @@ import java.util.Set;
  */
 public class Rule {
 
-	Expr head;
-	List<Expr> body;
+	private Expr head;
+	private List<Expr> body;
 
 	/**
 	 * Constructor that takes an expression as the head of the rule and a list of expressions as the body.
@@ -25,9 +27,9 @@ public class Rule {
 	 * @param body The list of expressions that make up the body of the rule (right hand side)
 	 */
 	public Rule(Expr head, List<Expr> body) {
-		this.head = head;
+		this.setHead(head);
 
-		this.body = Jatalog.reorderQuery(body);
+		this.setBody(Engine.reorderQuery(body));
 	}
 
 	/**
@@ -60,7 +62,7 @@ public class Rule {
 		// You won't be able to tell if the variables have been bound to _numeric_ values until you actually evaluate the
 		// expression, though.
 		Set<String> bodyVariables = new HashSet<String>();
-		for(Expr clause : body) {
+		for(Expr clause : getBody()) {
 			if (clause.isBuiltIn()) {
 				if (clause.terms.size() != 2)
 					throw new DatalogException("Operator " + clause.predicate + " must have only two operands");
@@ -96,7 +98,7 @@ public class Rule {
 		}
 		
 		// Enforce the rule that variables in the head must appear in the body
-		for (String term : head.terms) {
+		for (String term : getHead().terms) {
 			if (!Jatalog.isVariable(term)) {
 				throw new DatalogException("Constant " + term + " in head of rule " + toString());
 			}
@@ -110,11 +112,11 @@ public class Rule {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(head);
+		sb.append(getHead());
 		sb.append(" :- ");
-		for(int i = 0; i < body.size(); i++) {
-			sb.append(body.get(i));
-			if(i < body.size() - 1)
+		for(int i = 0; i < getBody().size(); i++) {
+			sb.append(getBody().get(i));
+			if(i < getBody().size() - 1)
 				sb.append(", ");
 		}
 		return sb.toString();
@@ -129,10 +131,10 @@ public class Rule {
 	 */
 	public Rule substitute(Map<String, String> bindings) {
 		List<Expr> subsBody = new ArrayList<>();
-		for(Expr e : body) {
+		for(Expr e : getBody()) {
 			subsBody.add(e.substitute(bindings));
 		}
-		return new Rule(this.head.substitute(bindings), subsBody);
+		return new Rule(this.getHead().substitute(bindings), subsBody);
 	}
 	
 	@Override
@@ -141,17 +143,33 @@ public class Rule {
 			return false;
 		}
 		Rule that = ((Rule) other);
-		if (!this.head.equals(that.head)) {
+		if (!this.getHead().equals(that.getHead())) {
 			return false;
 		}
-		if (this.body.size() != that.body.size()) {
+		if (this.getBody().size() != that.getBody().size()) {
 			return false;
 		}
-		for (Expr e : this.body) {
-			if (!that.body.contains(e)) {
+		for (Expr e : this.getBody()) {
+			if (!that.getBody().contains(e)) {
 				return false;
 			}
 		}
 		return true;
+	}
+
+	public Expr getHead() {
+		return head;
+	}
+
+	public void setHead(Expr head) {
+		this.head = head;
+	}
+
+	public List<Expr> getBody() {
+		return body;
+	}
+
+	public void setBody(List<Expr> body) {
+		this.body = body;
 	}
 }

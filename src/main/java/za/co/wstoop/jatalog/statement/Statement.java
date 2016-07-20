@@ -5,7 +5,7 @@ import java.util.Map;
 
 import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Jatalog;
-import za.co.wstoop.jatalog.OutputUtils;
+import za.co.wstoop.jatalog.output.OutputUtils;
 
 /**
  * Represents a statement that can be executed against a Jatalog database.

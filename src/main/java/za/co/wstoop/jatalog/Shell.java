@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import za.co.wstoop.jatalog.output.DefaultQueryOutput;
+import za.co.wstoop.jatalog.output.QueryOutput;
+import za.co.wstoop.jatalog.output.OutputUtils;
+
 /**
  * Shell for Jatalog.
  * This class contains a {@link #main(String...)} method that

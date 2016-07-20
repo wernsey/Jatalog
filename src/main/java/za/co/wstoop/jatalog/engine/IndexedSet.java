@@ -1,4 +1,4 @@
-package za.co.wstoop.jatalog;
+package za.co.wstoop.jatalog.engine;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import java.util.Set;
  * @param <E> Type of elements that will be stored in the set; must implement {@link Indexable}
  * @param <I> Type of the index
  */
-class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
+public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	
 	private Set<E> contents;	
 
@@ -30,7 +30,7 @@ class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	
 	/**
 	 * Creates the set from a different collection.
-	 * @param elements
+	 * @param elements The collection from which to construct
 	 */
 	public IndexedSet(Collection<E> elements) {		
 		contents = new HashSet<>(elements);

@@ -15,7 +15,7 @@ import za.co.wstoop.jatalog.statement.Statement;
 
 // TODO: Code coverage could be better... 
 public class FluentTest {
-
+	
 	@Test
 	public void testApp() throws Exception {
 		//This is how you would use the fluent API:
@@ -38,7 +38,7 @@ public class FluentTest {
             assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
             assertTrue(TestUtils.answerContains(answers, "X", "aab"));
             assertTrue(TestUtils.answerContains(answers, "X", "aaaa"));
-
+            
             // Alternative way to execute the statement:
             answers = jatalog.executeAll("ancestor(aa, X)?");
             assertTrue(TestUtils.answerContains(answers, "X", "aaa"));
@@ -80,7 +80,7 @@ public class FluentTest {
 			Statement statement = Jatalog.prepareStatement("sibling(A, B)?");
 			
 			//assertTrue(statement instanceof QueryStatement); // ugh - package private :(
-			
+						
 			Map<String, String> bindings = Jatalog.makeBindings("A", "aaa", "X", "xxx");
 						
 			// Run a query "who are siblings (of `aaa`)?"
