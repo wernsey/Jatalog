@@ -75,15 +75,17 @@ Queries can be run against the database once the facts and the rules have been e
 Answers come in the form of a collection of the mapping of variable names to values that satisfy the query. For example, the
 query `ancestor(X, carol)?`'s results will be `{X: alice}` and `{X: bob}`.
 
-In addition Jatalog implements some built-in predicates: equals "=", not equals "<>", greater than ">", greater or
+Jatalog implements some built-in predicates which can be used in rules and queries: equals "=", not equals "<>", greater than ">", greater or
 equals ">=", less than "<" and less or equals "<=".
 
-Jatalog has the `~` symbol for retracting facts form the database. For example, the statement `planet(pluto)~` will retract 
-the fact that `pluto` is a `planet`.
+You can have multiple clauses in a query, separated by commas. For example `sibling(A, B), A <> alice?` asks "who are siblings of A where A is not `alice`?"
+
+Additionally, Jatalog's syntax uses the `~` symbol for retracting facts form the database. For example, the statement `planet(pluto)~` will retract 
+the fact that `pluto` is a `planet`. The syntax is adapted from [rack]'s, but it is unclear whether other Datalog 
+implementations use it.
 
 The retract query can contain variables and multiple clauses: The statement `thing(N, X), X > 5~` will delete all _things_
-from the database where `X` is greater than 5. The syntax is borrowed from [rack], but I don't know whether other Datalog 
-implementations use it.
+from the database where `X` is greater than 5. 
 
 ### Fluent API
 
@@ -110,7 +112,11 @@ The `answers` collection will contain a list of all the variable mappings that s
     {X: alice}
     {X: bob}
 
-In addition, there is also a `Jatalog.prepareStatement()` method that will parse strings into `Statement` objects
+The query from the previous example can also be written as
+
+    answers = jatalog.executeAll("ancestor(X, carol)?");
+
+Jatalog also provides a `Jatalog.prepareStatement()` method that will parse strings into `Statement` objects
 that can be executed later. The `Statement.execute()` method takes a `Map<String, String>` of variable bindings
 as a parameter, so that it can be used to do batch inserts or queries. For example: 
 
