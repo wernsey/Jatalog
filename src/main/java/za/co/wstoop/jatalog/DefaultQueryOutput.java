@@ -12,8 +12,6 @@ public class DefaultQueryOutput implements QueryOutput {
 
     @Override
     public void writeResult(Statement statement, Collection<Map<String, String>> answers) {
-        Profiler.Timer timer = Profiler.getTimer("output");
-        try {
             System.out.println(statement.toString());
             if(!answers.isEmpty()){
                 if(answers.iterator().next().isEmpty()) {
@@ -26,9 +24,6 @@ public class DefaultQueryOutput implements QueryOutput {
             } else {
                 System.out.println("  No.");
             }
-        } finally {
-            timer.stop();
-        }
     }
 
 }

@@ -145,7 +145,6 @@ public class Jatalog {
      * @see QueryOutput
      */
     public Collection<Map<String, String>> executeAll(Reader reader, QueryOutput output) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("execute");
         try {
             StreamTokenizer scan = getTokenizer(reader);
             
@@ -160,8 +159,6 @@ public class Jatalog {
             return answers;
         } catch (IOException e) {
             throw new DatalogException(e);
-        } finally {
-            timer.stop();
         }
     }
 
@@ -216,34 +213,29 @@ public class Jatalog {
      */
 	public Collection<Map<String, String>> query(List<Expr> goals, Map<String, String> bindings)
 			throws DatalogException {
-		Profiler.Timer timer = Profiler.getTimer("query");
-		try {
-			if (goals.isEmpty())
-				return Collections.emptyList();
+		if (goals.isEmpty())
+			return Collections.emptyList();
 
-			// Reorganize the goals so that negated literals are at the end.
-			List<Expr> orderedGoals = reorderQuery(goals);
+		// Reorganize the goals so that negated literals are at the end.
+		List<Expr> orderedGoals = reorderQuery(goals);
 
-			// getRelevantPredicates() strips a large part of the rules, so if I want to
-			// do some benchmarking of expandDatabase(), I use the IDB directly instead:
-			// Collection<Rule> rules = idb;
-			Collection<String> predicates = getRelevantPredicates(goals);			
-			Collection<Rule> rules = idb.stream().filter(rule -> predicates.contains(rule.head.predicate)).collect(Collectors.toSet());
+		// getRelevantPredicates() strips a large part of the rules, so if I want to
+		// do some benchmarking of expandDatabase(), I use the IDB directly instead:
+		// Collection<Rule> rules = idb;
+		Collection<String> predicates = getRelevantPredicates(goals);			
+		Collection<Rule> rules = idb.stream().filter(rule -> predicates.contains(rule.head.predicate)).collect(Collectors.toSet());
 
-			// Build an IndexedSet<> with only the relevant facts for this particular query.			
-			IndexedSet<Expr, String> facts = new IndexedSet<>();
-			for(String predicate : predicates) {
-				facts.addAll(edbProvider.getFacts(predicate));
-			}
-
-			// Build the database. A Set ensures that the facts are unique
-			IndexedSet<Expr, String> resultSet = expandDatabase(facts, rules);
-
-			// Now match the expanded database to the goals
-			return matchGoals(orderedGoals, resultSet, bindings);
-		} finally {
-			timer.stop();
+		// Build an IndexedSet<> with only the relevant facts for this particular query.			
+		IndexedSet<Expr, String> facts = new IndexedSet<>();
+		for(String predicate : predicates) {
+			facts.addAll(edbProvider.getFacts(predicate));
 		}
+
+		// Build the database. A Set ensures that the facts are unique
+		IndexedSet<Expr, String> resultSet = expandDatabase(facts, rules);
+
+		// Now match the expanded database to the goals
+		return matchGoals(orderedGoals, resultSet, bindings);
 	}
 
 	/**
@@ -275,25 +267,20 @@ public class Jatalog {
         If for example you're querying employment status, you don't care about family relationships, etc.
         The advantages of this of this optimization becomes bigger the more complex the rules get. */
     private Collection<String> getRelevantPredicates(List<Expr> originalGoals) {
-        Profiler.Timer timer = Profiler.getTimer("getRelevantPredicates");
-        try {
-            Collection<String> relevant = new HashSet<>();
-            LinkedList<Expr> goals = new LinkedList<>(originalGoals);
-            while(!goals.isEmpty()) {
-                Expr expr = goals.poll();
-				if (!relevant.contains(expr.predicate)) {
-					relevant.add(expr.predicate);
-					for (Rule rule : idb) {
-						if (rule.head.predicate.equals(expr.predicate)) {
-							goals.addAll(rule.body);
-						}
+        Collection<String> relevant = new HashSet<>();
+        LinkedList<Expr> goals = new LinkedList<>(originalGoals);
+        while(!goals.isEmpty()) {
+            Expr expr = goals.poll();
+			if (!relevant.contains(expr.predicate)) {
+				relevant.add(expr.predicate);
+				for (Rule rule : idb) {
+					if (rule.head.predicate.equals(expr.predicate)) {
+						goals.addAll(rule.body);
 					}
 				}
-            }
-            return relevant;
-        } finally {
-            timer.stop();
+			}
         }
+        return relevant;
     }
 
     /* This basically constructs the dependency graph for semi-naive evaluation: In the returned map, the string
@@ -303,97 +290,77 @@ public class Jatalog {
         For example if you have a rule p(X) :- q(X) then there will be a mapping from "q" to that rule
         so that when new facts q(Z) are deduced, the rule will be run in the next iteration to deduce p(Z) */
     private Map<String, Collection<Rule>> buildDependentRules(Collection<Rule> rules) {
-        Profiler.Timer timer = Profiler.getTimer("buildDependentRules");
-        try {
-            Map<String, Collection<Rule>> map = new HashMap<>();
-            for(Rule rule : rules) {
-                for(Expr goal : rule.body) {
-                    Collection<Rule> dependants = map.get(goal.predicate);
-                    if(dependants == null) {
-                        dependants = new ArrayList<>();
-                        map.put(goal.predicate, dependants);
-                    }
-                    if(!dependants.contains(rule))
-                        dependants.add(rule);
+        Map<String, Collection<Rule>> map = new HashMap<>();
+        for(Rule rule : rules) {
+            for(Expr goal : rule.body) {
+                Collection<Rule> dependants = map.get(goal.predicate);
+                if(dependants == null) {
+                    dependants = new ArrayList<>();
+                    map.put(goal.predicate, dependants);
                 }
+                if(!dependants.contains(rule))
+                    dependants.add(rule);
             }
-            return map;
-        } finally {
-            timer.stop();
         }
+        return map;
     }
-
+    
     /* Retrieves all the rules that are affected by a collection of facts.
      * This is used as part of the semi-naive evaluation: When new facts are generated, we 
      * take a look at which rules have those facts in their bodies and may cause new facts 
      * to be derived during the next iteration. 
      * The `dependents` parameter was built earlier in the buildDependentRules() method */
     private Collection<Rule> getDependentRules(IndexedSet<Expr,String> facts, Map<String, Collection<Rule>> dependents) {
-        Profiler.Timer timer = Profiler.getTimer("getDependentRules");
-        try {
         	
- //       	return facts.getIndexes().stream().flatMap(pred -> dependents.get(pred)!=null?dependents.get(pred).stream():Stream.empty()).filter(rules -> rules != null).collect(Collectors.toSet());
+ //     return facts.getIndexes().stream().flatMap(pred -> dependents.get(pred)!=null?dependents.get(pred).stream():Stream.empty()).filter(rules -> rules != null).collect(Collectors.toSet());
         	
-            Set<Rule> dependantRules = new HashSet<>();
-            for(String predicate : facts.getIndexes()) {
-                Collection<Rule> rules = dependents.get(predicate);
-                if(rules != null) {
-                    dependantRules.addAll(rules);
-                }
+        Set<Rule> dependantRules = new HashSet<>();
+        for(String predicate : facts.getIndexes()) {
+            Collection<Rule> rules = dependents.get(predicate);
+            if(rules != null) {
+                dependantRules.addAll(rules);
             }
-            return dependantRules;
-        } finally {
-            timer.stop();
         }
+        return dependantRules;
     }
 
     /* The core of the bottom-up implementation:
      * It computes the stratification of the rules in the EDB and then expands each
      * strata in turn, returning a collection of newly derived facts. */
     private IndexedSet<Expr,String> expandDatabase(IndexedSet<Expr,String> facts, Collection<Rule> allRules) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("buildDatabase");
-        try {
-            List< Collection<Rule> > strata = computeStratification(allRules);
-            for(int i = 0; i < strata.size(); i++) {
-                Collection<Rule> rules = strata.get(i);
-                if(rules != null && !rules.isEmpty()) {
-                    expandStrata(facts, rules);
-                }
+        List< Collection<Rule> > strata = computeStratification(allRules);
+        for(int i = 0; i < strata.size(); i++) {
+            Collection<Rule> rules = strata.get(i);
+            if(rules != null && !rules.isEmpty()) {
+                expandStrata(facts, rules);
             }
-            return facts;
-        } finally {
-            timer.stop();
         }
+        return facts;
     }
 
     /* Computes the stratification of the rules in the IDB by doing a depth-first search.
      * It throws a DatalogException if there are negative loops in the rules, in which case the
      * rules aren't stratified and cannot be computed. */
     private List< Collection<Rule> > computeStratification(Collection<Rule> allRules) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("computeStratification");
-        try {
-            ArrayList<Collection<Rule>> strata = new ArrayList<>(10);
+        ArrayList<Collection<Rule>> strata = new ArrayList<>(10);
 
-            Map<String, Integer> strats = new HashMap<>();
-            for(Rule rule : allRules) {
-                String pred = rule.head.predicate;
-                Integer stratum = strats.get(pred);
-                if(stratum == null) {
-                    stratum = depthFirstSearch(rule.head, allRules, new ArrayList<>(), 0);
-                    strats.put(pred, stratum);
-                }
-
-                while(stratum >= strata.size()) {
-                    strata.add(new ArrayList<>());
-                }
-                strata.get(stratum).add(rule);
+        Map<String, Integer> strats = new HashMap<>();
+        for(Rule rule : allRules) {
+            String pred = rule.head.predicate;
+            Integer stratum = strats.get(pred);
+            if(stratum == null) {
+                stratum = depthFirstSearch(rule.head, allRules, new ArrayList<>(), 0);
+                strats.put(pred, stratum);
             }
 
-            strata.add(allRules);
-            return strata;
-        } finally {
-            timer.stop();
+            while(stratum >= strata.size()) {
+                strata.add(new ArrayList<>());
+            }
+            strata.get(stratum).add(rule);
         }
+
+        strata.add(allRules);
+        return strata;
     }
 
     /* The recursive depth-first method that computes the stratification of a set of rules */
@@ -444,56 +411,40 @@ public class Jatalog {
      * facts in each iteration of the loop.
      */
     private Collection<Expr> expandStrata(IndexedSet<Expr,String> facts, Collection<Rule> strataRules) {
-        Profiler.Timer timer = Profiler.getTimer("expandStrata");
-        try {
-            Collection<Rule> rules = strataRules;
+        Collection<Rule> rules = strataRules;
 
-            Map<String, Collection<Rule>> dependentRules = buildDependentRules(strataRules);
+        Map<String, Collection<Rule>> dependentRules = buildDependentRules(strataRules);
 
-            while(true) {
-                Profiler.Timer loopTimer = Profiler.getTimer("loopTimer");
-                try {
-                    // Match each rule to the facts
-                	IndexedSet<Expr,String> newFacts = new IndexedSet<>();
-                    for(Rule rule : rules) {
-                        newFacts.addAll(matchRule(facts, rule));
-                    }
-
-                    // Repeat until there are no more facts added
-                    if(newFacts.isEmpty()) {
-                        return facts;
-                    }
-
-                    // Determine which rules depend on the newly derived facts
-                    rules = getDependentRules(newFacts, dependentRules);
-
-                    facts.addAll(newFacts);
-                } finally {
-                    loopTimer.stop();
-                }
+        while(true) {
+            // Match each rule to the facts
+        	IndexedSet<Expr,String> newFacts = new IndexedSet<>();
+            for(Rule rule : rules) {
+                newFacts.addAll(matchRule(facts, rule));
             }
-        } finally {
-            timer.stop();
+
+            // Repeat until there are no more facts added
+            if(newFacts.isEmpty()) {
+                return facts;
+            }
+
+            // Determine which rules depend on the newly derived facts
+            rules = getDependentRules(newFacts, dependentRules);
+
+            facts.addAll(newFacts);
         }
     }
-
+    
     /* Match the facts in the EDB against a specific rule */
     private Set<Expr> matchRule(IndexedSet<Expr,String> facts, Rule rule) {
-        Profiler.Timer timer = Profiler.getTimer("matchRule");
-        try {
-            if(rule.body.isEmpty()) // If this happens, you're using the API wrong.
-                return Collections.emptySet();
+        if(rule.body.isEmpty()) // If this happens, you're using the API wrong.
+            return Collections.emptySet();
 
-            // Match the rule body to the facts.
-            Collection<Map<String, String>> answers = matchGoals(rule.body, facts, null);
-
-            return answers.stream().map(answer -> rule.head.substitute(answer))
-            		.filter(derivedFact -> !facts.contains(derivedFact))
-            		.collect(Collectors.toSet());
-            
-        } finally {
-            timer.stop();
-        }
+        // Match the rule body to the facts.
+        Collection<Map<String, String>> answers = matchGoals(rule.body, facts, null);
+        
+        return answers.stream().map(answer -> rule.head.substitute(answer))
+        		.filter(derivedFact -> !facts.contains(derivedFact))
+        		.collect(Collectors.toSet());
     }
 
     /* Match the goals in a rule to the facts in the database (recursively). 
@@ -659,17 +610,12 @@ public class Jatalog {
      * @throws DatalogException on errors encountered during evaluation.
      */
     public boolean delete(List<Expr> goals, Map<String, String> bindings) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("delete");
-        try {
-            Collection<Map<String, String>> answers = query(goals, bindings);
-            List<Expr> facts = answers.stream()
-                // and substitute the answer on each goal
-                .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
-                .collect(Collectors.toList());
-            return edbProvider.removeAll(facts);
-        } finally {
-            timer.stop();
-        }
+        Collection<Map<String, String>> answers = query(goals, bindings);
+        List<Expr> facts = answers.stream()
+            // and substitute the answer on each goal
+            .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
+            .collect(Collectors.toList());
+        return edbProvider.removeAll(facts);
     }
     
     /**

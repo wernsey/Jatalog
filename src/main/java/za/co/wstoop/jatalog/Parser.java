@@ -25,8 +25,6 @@ class Parser {
     static Statement parseStmt(StreamTokenizer scan) throws DatalogException {
     	
     	List<Expr> goals = new ArrayList<>();
-    	
-        Profiler.Timer timer = Profiler.getTimer("parseStmt");
         try {
             Expr head = parseExpr(scan);
             if(scan.nextToken() == ':') {
@@ -75,14 +73,11 @@ class Parser {
             }
         } catch (IOException e) {
             throw new DatalogException(e);
-        } finally {
-            timer.stop();
         }
     }
 
     /* parses an expression */
     static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
-        Profiler.Timer timer = Profiler.getTimer("parseExpr");
         try {
             scan.nextToken();
 
@@ -143,8 +138,6 @@ class Parser {
             return e;
         } catch (IOException e) {
             throw new DatalogException(e);
-        } finally {
-            timer.stop();
         }
     }
 
