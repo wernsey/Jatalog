@@ -14,10 +14,11 @@ import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Expr;
 import za.co.wstoop.jatalog.Jatalog;
 import za.co.wstoop.jatalog.Rule;
+import za.co.wstoop.jatalog.Term;
 
 public abstract class Engine {
 
-	public abstract Collection<Map<String, String>> query(Jatalog jatalog, List<Expr> goals, Map<String, String> bindings) throws DatalogException;
+	public abstract Collection<Map<String, Term>> query(Jatalog jatalog, List<Expr> goals, Map<String, Term> bindings) throws DatalogException;
 
 	/* Reorganize the goals in a query so that negated literals are at the end.
     A rule such as `a(X) :- not b(X), c(X)` won't work if the `not b(X)` is evaluated first, since X will not
@@ -171,14 +172,14 @@ public abstract class Engine {
     
     /* Match the goals in a rule to the facts in the database (recursively). 
      * If the goal is a built-in predicate, it is also evaluated here. */
-    protected static Collection<Map<String, String>> matchGoals(List<Expr> goals, IndexedSet<Expr,String> facts, Map<String, String> bindings) {
+    protected static Collection<Map<String, Term>> matchGoals(List<Expr> goals, IndexedSet<Expr,String> facts, Map<String, Term> bindings) {
 
         Expr goal = goals.get(0); // First goal; Assumes goals won't be empty
 
         boolean lastGoal = (goals.size() == 1);
 
         if(goal.isBuiltIn()) {
-            Map<String, String> newBindings = new StackMap<String, String>(bindings);
+            Map<String, Term> newBindings = new StackMap<>(bindings);
             boolean eval = goal.evalBuiltIn(newBindings);
             if(eval && !goal.isNegated() || !eval && goal.isNegated()) {
                 if(lastGoal) {
@@ -190,13 +191,13 @@ public abstract class Engine {
             return Collections.emptyList();
         }
 
-        Collection<Map<String, String>> answers = new ArrayList<>();
+        Collection<Map<String, Term>> answers = new ArrayList<>();
         if(!goal.isNegated()) {
             // Positive rule: Match each fact to the first goal.
             // If the fact matches: If it is the last/only goal then we can return the bindings
             // as an answer, otherwise we recursively check the remaining goals.
             for(Expr fact : facts.getIndexed(goal.getPredicate())) {
-                Map<String, String> newBindings = new StackMap<String, String>(bindings);
+                Map<String, Term> newBindings = new StackMap<String, Term>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     if(lastGoal) {
                         answers.add(newBindings);
@@ -217,7 +218,7 @@ public abstract class Engine {
                 goal = goal.substitute(bindings);
             }
             for(Expr fact : facts.getIndexed(goal.getPredicate())) {
-                Map<String, String> newBindings = new StackMap<String, String>(bindings);
+                Map<String, Term> newBindings = new StackMap<String, Term>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     return Collections.emptyList();
                 }

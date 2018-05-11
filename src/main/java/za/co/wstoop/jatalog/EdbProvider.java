@@ -20,25 +20,25 @@ public interface EdbProvider {
 	 * Retrieves a {@code Collection} of all the facts in the database.
 	 * @return All the facts in the EDB
 	 */
-	public Collection<Expr> allFacts();
+	Collection<Expr> allFacts();
 	
 	/**
 	 * Adds a fact to the EDB database.
 	 * @param fact The fact to add
 	 */
-	public void add(Expr fact);
+	void add(Expr fact);
 	
 	/**
 	 * Removes facts from the database
 	 * @param facts the facts to remove
 	 * @return true if facts were removed
 	 */
-	public boolean removeAll(Collection<Expr> facts);
+	boolean removeAll(Collection<Expr> facts);
 
 	/**
 	 * Retrieves all the facts in the database that match specific predicate.
 	 * @param predicate The predicate of the facts to be retrieved.
 	 * @return A collection of facts matching the {@code predicate}
 	 */
-	public Collection<Expr> getFacts(String predicate);
+	Collection<Expr> getFacts(String predicate);
 }

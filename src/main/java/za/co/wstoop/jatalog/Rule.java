@@ -61,36 +61,36 @@ public class Rule {
 		// them, i.e. a rule like `s(A, B) :- r(A,B), A > X` is invalid ('=' is an exception because it can bind variables)
 		// You won't be able to tell if the variables have been bound to _numeric_ values until you actually evaluate the
 		// expression, though.
-		Set<String> bodyVariables = new HashSet<String>();
+		Set<Term> bodyVariables = new HashSet<Term>();
 		for(Expr clause : getBody()) {
 			if (clause.isBuiltIn()) {
 				if (clause.getTerms().size() != 2)
 					throw new DatalogException("Operator " + clause.getPredicate() + " must have only two operands");
-				String a = clause.getTerms().get(0);
-				String b = clause.getTerms().get(1);
+				Term a = clause.getTerms().get(0);
+				Term b = clause.getTerms().get(1);
 				if (clause.getPredicate().equals("=")) {
-					if (Jatalog.isVariable(a) && Jatalog.isVariable(b) && !bodyVariables.contains(a)
+					if (a.isVariable() && b.isVariable() && !bodyVariables.contains(a)
 							&& !bodyVariables.contains(b)) {
 						throw new DatalogException("Both variables of '=' are unbound in clause " + a + " = " + b);
 					}
 				} else {
-					if (Jatalog.isVariable(a) && !bodyVariables.contains(a)) {
+					if (a.isVariable() && !bodyVariables.contains(a)) {
 						throw new DatalogException("Unbound variable " + a + " in " + clause);
 					}
-					if (Jatalog.isVariable(b) && !bodyVariables.contains(b)) {
+					if (b.isVariable() && !bodyVariables.contains(b)) {
 						throw new DatalogException("Unbound variable " + b + " in " + clause);
 					}
 				}
 			} 
 			if(clause.isNegated()) {
-				for (String term : clause.getTerms()) {
-					if (Jatalog.isVariable(term) && !bodyVariables.contains(term)) {
+				for (Term term : clause.getTerms()) {
+					if (term.isVariable() && !bodyVariables.contains(term)) {
 						throw new DatalogException("Variable " + term + " of rule " + toString() + " must appear in at least one positive expression");
 					}
 				}
 			} else {
-				for (String term : clause.getTerms()) {
-					if (Jatalog.isVariable(term)) {
+				for (Term term : clause.getTerms()) {
+					if (term.isVariable()) {
 						bodyVariables.add(term);
 					}
 				}
@@ -98,8 +98,8 @@ public class Rule {
 		}
 		
 		// Enforce the rule that variables in the head must appear in the body
-		for (String term : getHead().getTerms()) {
-			if (!Jatalog.isVariable(term)) {
+		for (Term term : getHead().getTerms()) {
+			if (!term.isVariable()) {
 				throw new DatalogException("Constant " + term + " in head of rule " + toString());
 			}
 			if (!bodyVariables.contains(term)) {
@@ -129,7 +129,7 @@ public class Rule {
 	 * @param bindings The bindings to substitute.
 	 * @return the Rule with the substituted bindings. 
 	 */
-	public Rule substitute(Map<String, String> bindings) {
+	public Rule substitute(Map<String, Term> bindings) {
 		List<Expr> subsBody = new ArrayList<>();
 		for(Expr e : getBody()) {
 			subsBody.add(e.substitute(bindings));
@@ -156,6 +156,16 @@ public class Rule {
 		}
 		return true;
 	}
+
+  @Override
+  public int hashCode() {
+    int result = 0;
+    result = 31 * result + head.hashCode();
+    for (Expr e : body) {
+      result = 31 * result + e.hashCode();
+    }
+    return result;
+  }
 
 	public Expr getHead() {
 		return head;

@@ -6,6 +6,7 @@ import java.util.Map;
 import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Expr;
 import za.co.wstoop.jatalog.Jatalog;
+import za.co.wstoop.jatalog.Term;
 
 class InsertFactStatement implements Statement {
 
@@ -16,7 +17,7 @@ class InsertFactStatement implements Statement {
 	}
 
 	@Override
-	public Collection<Map<String, String>> execute(Jatalog datalog, Map<String, String> bindings) throws DatalogException {
+	public Collection<Map<String, Term>> execute(Jatalog datalog, Map<String, Term> bindings) throws DatalogException {
 		Expr newFact;
 		if(bindings != null) {
 			newFact = fact.substitute(bindings);

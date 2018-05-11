@@ -10,7 +10,7 @@ import za.co.wstoop.jatalog.engine.IndexedSet;
  */
 public class BasicEdbProvider implements EdbProvider {
 
-	private IndexedSet<Expr, String> edb;
+	private final IndexedSet<Expr, String> edb;
 	
 	public BasicEdbProvider() {
 		edb = new IndexedSet<Expr, String>();

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Jatalog;
+import za.co.wstoop.jatalog.Term;
 import za.co.wstoop.jatalog.output.OutputUtils;
 
 /**
@@ -42,7 +43,7 @@ public interface Statement {
 	 * @throws DatalogException if an error occurs in processing the statement
 	 * @see OutputUtils#answersToString(Collection)
 	 */
-	public Collection<Map<String, String>> execute(Jatalog datalog, Map<String, String> bindings) throws DatalogException;
+	Collection<Map<String, Term>> execute(Jatalog datalog, Map<String, Term> bindings) throws DatalogException;
 	
 	/**
 	 * Shorthand for {@code statement.execute(jatalog, null)}.
@@ -51,7 +52,7 @@ public interface Statement {
 	 * @throws DatalogException if an error occurs in processing the statement
 	 * @see #execute(Jatalog, Map)
 	 */
-	default public Collection<Map<String, String>> execute(Jatalog datalog) throws DatalogException {
+	default Collection<Map<String, Term>> execute(Jatalog datalog) throws DatalogException {
 		return execute(datalog, null);
 	}
 	

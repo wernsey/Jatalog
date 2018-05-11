@@ -8,6 +8,7 @@ import java.util.Map;
 import za.co.wstoop.jatalog.Expr;
 import za.co.wstoop.jatalog.Jatalog;
 import za.co.wstoop.jatalog.Rule;
+import za.co.wstoop.jatalog.Term;
 
 /**
  * Utilities for processing {@link Jatalog}'s output.
@@ -32,15 +33,15 @@ public class OutputUtils {
      * @param bindings the bindings to convert to a String
      * @return A string representing the variable bindings
      */
-    public static String bindingsToString(Map<String, String> bindings) {
+    public static String bindingsToString(Map<String, Term> bindings) {
         StringBuilder sb = new StringBuilder("{");
         int s = bindings.size(), i = 0;
         for(String k : bindings.keySet()) {
-            String v = bindings.get(k);
+            Term v = bindings.get(k);
             sb.append(k).append(": ");
-            if(v.startsWith("\"")) {
+            if(v.value().startsWith("\"")) {
                 // Needs more org.apache.commons.lang3.StringEscapeUtils#escapeJava(String)
-                sb.append('"').append(v.substring(1).replaceAll("\"", "\\\\\"")).append("\"");
+                sb.append('"').append(v.value().substring(1).replaceAll("\"", "\\\\\"")).append("\"");
             } else {
                 sb.append(v);
             }
@@ -63,7 +64,7 @@ public class OutputUtils {
      * @param answers The collection of answers
      * @return A string representing the answers.
      */
-    public static String answersToString(Collection<Map<String, String>> answers) {
+    public static String answersToString(Collection<Map<String, Term>> answers) {
 
         StringBuilder sb = new StringBuilder();
         // If `answers` is null, the line passed to `jatalog.query(line)` was a statement that didn't
@@ -77,7 +78,7 @@ public class OutputUtils {
                 if(answers.iterator().next().isEmpty()) {
                     sb.append("Yes.");
                 } else {
-                    Iterator<Map<String, String>> iter = answers.iterator();
+                    Iterator<Map<String, Term>> iter = answers.iterator();
                     while (iter.hasNext()) {
                         sb.append(bindingsToString(iter.next()));
                         if (iter.hasNext()) {

@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import za.co.wstoop.jatalog.output.DefaultQueryOutput;
-import za.co.wstoop.jatalog.output.QueryOutput;
 import za.co.wstoop.jatalog.output.OutputUtils;
+import za.co.wstoop.jatalog.output.QueryOutput;
 
 /**
  * Shell for Jatalog.
@@ -119,7 +119,7 @@ public class Shell {
                     } 
                     
                     long start = System.currentTimeMillis();                    
-                    Collection<Map<String, String>> answers = jatalog.executeAll(line);
+                    Collection<Map<String, Term>> answers = jatalog.executeAll(line);
                     double elapsed = (System.currentTimeMillis() - start)/1000.0;
                     
 					if (answers != null) {

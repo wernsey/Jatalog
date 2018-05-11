@@ -11,11 +11,12 @@ import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Expr;
 import za.co.wstoop.jatalog.Jatalog;
 import za.co.wstoop.jatalog.Rule;
+import za.co.wstoop.jatalog.Term;
 
 public class BasicEngine extends Engine {
 
 	@Override
-	public Collection<Map<String, String>> query(Jatalog jatalog, List<Expr> goals, Map<String, String> bindings) throws DatalogException {
+	public Collection<Map<String, Term>> query(Jatalog jatalog, List<Expr> goals, Map<String, Term> bindings) throws DatalogException {
 		if (goals.isEmpty())
 			return Collections.emptyList();
 
@@ -92,7 +93,7 @@ public class BasicEngine extends Engine {
             return Collections.emptySet();
 
         // Match the rule body to the facts.
-        Collection<Map<String, String>> answers = matchGoals(rule.getBody(), facts, null);
+        Collection<Map<String, Term>> answers = matchGoals(rule.getBody(), facts, null);
         
         return answers.stream().map(answer -> rule.getHead().substitute(answer))
         		.filter(derivedFact -> !facts.contains(derivedFact))

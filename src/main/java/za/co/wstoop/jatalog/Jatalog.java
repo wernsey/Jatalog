@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 import za.co.wstoop.jatalog.engine.BasicEngine;
 import za.co.wstoop.jatalog.engine.Engine;
-import za.co.wstoop.jatalog.output.QueryOutput;
 import za.co.wstoop.jatalog.output.OutputUtils;
+import za.co.wstoop.jatalog.output.QueryOutput;
 import za.co.wstoop.jatalog.statement.Statement;
 
 /**
@@ -89,16 +89,6 @@ public class Jatalog {
         this.idb = new ArrayList<>();
     }
 
-    /**
-     * Checks whether a term represents a variable.
-     * Variables start with upper-case characters. 
-     * @param term The term to test
-     * @return true if the term is a variable
-     */
-    static boolean isVariable(String term) {
-        return Character.isUpperCase(term.charAt(0));
-    }
-    
     /* Specific tokenizer for our syntax */
 	private static StreamTokenizer getTokenizer(Reader reader) throws IOException {
 		StreamTokenizer scan = new StreamTokenizer(reader);
@@ -112,10 +102,10 @@ public class Jatalog {
 	}
     
 	/* Internal method for executing one and only one statement */
-    private Collection<Map<String, String>> executeSingleStatement(StreamTokenizer scan, Reader reader, QueryOutput output) throws DatalogException {
+    private Collection<Map<String, Term>> executeSingleStatement(StreamTokenizer scan, Reader reader, QueryOutput output) throws DatalogException {
     	Statement statement = Parser.parseStmt(scan);
 		try {
-			Collection<Map<String, String>> answers = statement.execute(this);
+			Collection<Map<String, Term>> answers = statement.execute(this);
 			if (answers != null && output != null) {
 				output.writeResult(statement, answers);
 			}
@@ -146,12 +136,13 @@ public class Jatalog {
      * @throws DatalogException on syntax and I/O errors encountered while executing. 
      * @see QueryOutput
      */
-    public Collection<Map<String, String>> executeAll(Reader reader, QueryOutput output) throws DatalogException {
+    public Collection<Map<String, Term>> executeAll(Reader reader, QueryOutput output) throws DatalogException {
         try {
             StreamTokenizer scan = getTokenizer(reader);
+            scan.wordChars('_', '_');
             
             // Tracks the last query's answers
-            Collection<Map<String, String>> answers = null;
+            Collection<Map<String, Term>> answers = null;
             scan.nextToken();
             while(scan.ttype != StreamTokenizer.TT_EOF) {
                 scan.pushBack();
@@ -171,7 +162,7 @@ public class Jatalog {
      * 	See {@link #executeAll(Reader, QueryOutput)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
-    public Collection<Map<String, String>> executeAll(String statements) throws DatalogException {
+    public Collection<Map<String, Term>> executeAll(String statements) throws DatalogException {
         // It would've been fun to wrap the results in a java.sql.ResultSet, but damn,
         // those are a lot of methods to implement:
         // https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html
@@ -187,7 +178,7 @@ public class Jatalog {
      * 	See {@link OutputUtils#answersToString(Collection)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
      */
-	public Collection<Map<String, String>> query(List<Expr> goals, Map<String, String> bindings)
+	public Collection<Map<String, Term>> query(List<Expr> goals, Map<String, Term> bindings)
 			throws DatalogException {
 		return engine.query(this, goals, bindings);
 	}
@@ -199,7 +190,7 @@ public class Jatalog {
      * 	See {@link OutputUtils#answersToString(Collection)} for details on how to interpret the result.
      * @throws DatalogException on syntax errors encountered while executing. 
 	 */
-	public Collection<Map<String, String>> query(List<Expr> goals) throws DatalogException {
+	public Collection<Map<String, Term>> query(List<Expr> goals) throws DatalogException {
 		return query(goals, null);
 	}
 
@@ -213,7 +204,7 @@ public class Jatalog {
 	 * @throws DatalogException
 	 *             on syntax errors encountered while executing.
 	 */
-	public Collection<Map<String, String>> query(Expr... goals) throws DatalogException {
+	public Collection<Map<String, Term>> query(Expr... goals) throws DatalogException {
 		return query(Arrays.asList(goals), null);
 	}
 
@@ -318,8 +309,8 @@ public class Jatalog {
      * @return true if any facts were deleted.
      * @throws DatalogException on errors encountered during evaluation.
      */
-    public boolean delete(List<Expr> goals, Map<String, String> bindings) throws DatalogException {
-        Collection<Map<String, String>> answers = query(goals, bindings);
+    public boolean delete(List<Expr> goals, Map<String, Term> bindings) throws DatalogException {
+        Collection<Map<String, Term>> answers = query(goals, bindings);
         List<Expr> facts = answers.stream()
             // and substitute the answer on each goal
             .flatMap(answer -> goals.stream().map(goal -> goal.substitute(answer)))
@@ -373,15 +364,15 @@ public class Jatalog {
      * @throws DatalogException on error
      * @see Statement#execute(Jatalog, Map)
      */
-	public static Map<String, String> makeBindings(Object... kvPairs) throws DatalogException {
-		Map<String, String> mapping = new HashMap<String, String>();
+	public static Map<String, Term> makeBindings(Object... kvPairs) throws DatalogException {
+		Map<String, Term> mapping = new HashMap<String, Term>();
 		if (kvPairs.length % 2 != 0) {
 			throw new DatalogException("kvPairs must be even");
 		}
 		for (int i = 0; i < kvPairs.length / 2; i++) {
 			String k = kvPairs[i * 2].toString();
 			String v = kvPairs[i * 2 + 1].toString();
-			mapping.put(k, v);
+			mapping.put(k, new Term(v));
 		}
 		return mapping;
 	}

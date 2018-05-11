@@ -77,7 +77,7 @@ class Parser {
     }
 
     /* parses an expression */
-    static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
+    private static Expr parseExpr(StreamTokenizer scan) throws DatalogException {
         try {
             scan.nextToken();
 

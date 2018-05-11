@@ -15,8 +15,8 @@ import java.util.Set;
  * @param <I> Type of the index
  */
 public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
-	
-	private Set<E> contents;	
+
+  private final Set<E> contents;
 
 	private Map<I, Set<E>> index;
 	

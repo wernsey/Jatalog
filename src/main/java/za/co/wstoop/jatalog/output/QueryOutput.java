@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import za.co.wstoop.jatalog.Jatalog;
+import za.co.wstoop.jatalog.Term;
 import za.co.wstoop.jatalog.statement.Statement;
 
 /**
@@ -25,5 +26,5 @@ public interface QueryOutput {
      * @param statement The statement that was evaluated to produce the output.
      * @param answers The result of the query, as a Collection of variable mappings.
      */
-    public void writeResult(Statement statement, Collection<Map<String, String>> answers);
+    void writeResult(Statement statement, Collection<Map<String, Term>> answers);
 }
