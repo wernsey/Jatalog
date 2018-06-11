@@ -13,7 +13,13 @@ public class Term {
   }
 
   public Term(String term, boolean isVariable) {
-    this.term = term;
+    int firstPos = term.indexOf("\"");
+    int lastPos = term.lastIndexOf("\"");
+    if (firstPos >= 0 && lastPos >= 0 && firstPos < lastPos) {
+      this.term = term.substring(firstPos + 1, lastPos);
+    } else {
+      this.term = term;
+    }
     this.isVariable = isVariable;
   }
 

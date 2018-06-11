@@ -122,7 +122,7 @@ class Parser {
                     if(scan.nextToken() == StreamTokenizer.TT_WORD) {
                         terms.add(scan.sval);
                     } else if(scan.ttype == '"' || scan.ttype == '\'') {
-                        terms.add("\"" + scan.sval);
+                        terms.add("\"" + scan.sval + "\"");
                     } else if(scan.ttype == StreamTokenizer.TT_NUMBER) {
                         terms.add(numberToString(scan.nval));
                     } else {
