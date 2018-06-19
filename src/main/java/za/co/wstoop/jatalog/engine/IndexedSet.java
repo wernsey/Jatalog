@@ -58,14 +58,18 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 
 	public Set<E> getIndexed(String key, List<Term> terms) {
 		Set<E> set = new HashSet<>();
+		boolean hasFixedPoint = false;
 		for (int i = 0; i < terms.size(); i++) {
 			Term term = terms.get(i);
-			String k = key + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
-			if (index2.containsKey(k)) {
-				set.addAll(index2.get(k));
+			if (!term.isVariable()) {
+				String k = key + "_" + Integer.toString(i, 10) + "_" + term.value();
+				if (index2.containsKey(k)) {
+					set.addAll(index2.get(k));
+				}
+				hasFixedPoint = true;
 			}
 		}
-		return set;
+		return hasFixedPoint ? set : getIndexed(key);
 	}
 
 	public Collection<String> getIndexes() {
@@ -84,14 +88,16 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 			for (int i = 0; i < element.getTerms().size(); i++) {
 				Set<E> es;
 				Term term = element.getTerms().get(i);
-				String key = element.index() + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
-				if (index2.containsKey(key)) {
-					es = index2.get(key);
-				} else {
-					es = new HashSet<>();
-					index2.put(key, es);
+				if (!term.isVariable()) {
+					String key = element.index() + "_" + Integer.toString(i, 10) + "_" + term.value();
+					if (index2.containsKey(key)) {
+						es = index2.get(key);
+					} else {
+						es = new HashSet<>();
+						index2.put(key, es);
+					}
+					es.add(element);
 				}
-				es.add(element);
 			}
 		}
 	}
@@ -108,14 +114,16 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 			for (int i = 0; i < element.getTerms().size(); i++) {
 				Set<E> es;
 				Term term = element.getTerms().get(i);
-				String key = element.index() + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
-				if (index2.containsKey(key)) {
-					es = index2.get(key);
-				} else {
-					es = new HashSet<>();
-					index2.put(key, es);
+				if (!term.isVariable()) {
+					String key = element.index() + "_" + Integer.toString(i, 10) + "_" + term.value();
+					if (index2.containsKey(key)) {
+						es = index2.get(key);
+					} else {
+						es = new HashSet<>();
+						index2.put(key, es);
+					}
+					es.add(element);
 				}
-				es.add(element);
 			}
 			return true;
 		}
