@@ -5,26 +5,31 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import za.co.wstoop.jatalog.Expr;
+import za.co.wstoop.jatalog.Term;
 
 /**
  * Subclass of {@link Set} that can quickly access a subset of its elements through an index.
  * Jatalog uses it to quickly retrieve the facts with a specific predicate.   
  * @param <E> Type of elements that will be stored in the set; must implement {@link Indexable}
- * @param <I> Type of the index
  */
-public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
+public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 
   private final Set<E> contents;
 
-	private Map<I, Set<E>> index;
-	
+	private Map<String, Set<E>> index;
+	private Map<String, Set<E>> index2;
+
 	/**
 	 * Default constructor.
 	 */
 	public IndexedSet() {
-		index = new HashMap<I, Set<E>>();
+		index = new HashMap<>();
+		index2 = new HashMap<>();
 		contents = new HashSet<>();
 	}
 	
@@ -43,25 +48,51 @@ public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	 * @param key The indexed element
 	 * @return The specified subset
 	 */
-	public Set<E> getIndexed(I key) {		
+	public Set<E> getIndexed(String key) {
 		Set<E> elements = index.get(key);
-		if(elements == null) return Collections.emptySet();
+		if(elements == null) {
+			return Collections.emptySet();
+		}
 		return elements;
 	}
 
-	public Collection<I> getIndexes() {
+	public Set<E> getIndexed(String key, List<Term> terms) {
+		Set<E> set = new HashSet<>();
+		for (int i = 0; i < terms.size(); i++) {
+			Term term = terms.get(i);
+			String k = key + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
+			if (index2.containsKey(k)) {
+				set.addAll(index2.get(k));
+			}
+		}
+		return set;
+	}
+
+	public Collection<String> getIndexes() {
 		return index.keySet();
 	}
 	
 	private void reindex() {
-		index = new HashMap<I, Set<E>>();
+		index = new HashMap<>();
 		for (E element : contents) {
 			Set<E> elements = index.get(element.index());
 			if (elements == null) {
-				elements = new HashSet<E>();
+				elements = new HashSet<>();
 				index.put(element.index(), elements);
 			}
 			elements.add(element);
+			for (int i = 0; i < element.getTerms().size(); i++) {
+				Set<E> es;
+				Term term = element.getTerms().get(i);
+				String key = element.index() + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
+				if (index2.containsKey(key)) {
+					es = index2.get(key);
+				} else {
+					es = new HashSet<>();
+					index2.put(key, es);
+				}
+				es.add(element);
+			}
 		}
 	}
 
@@ -70,10 +101,22 @@ public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 		if (contents.add(element)) {
 			Set<E> elements = index.get(element.index());
 			if (elements == null) {
-				elements = new HashSet<E>();
+				elements = new HashSet<>();
 				index.put(element.index(), elements);
 			}
 			elements.add(element);
+			for (int i = 0; i < element.getTerms().size(); i++) {
+				Set<E> es;
+				Term term = element.getTerms().get(i);
+				String key = element.index() + "_" + Integer.toString(i, 10) + "_" + (term.isVariable() ? "_" : term.value());
+				if (index2.containsKey(key)) {
+					es = index2.get(key);
+				} else {
+					es = new HashSet<>();
+					index2.put(key, es);
+				}
+				es.add(element);
+			}
 			return true;
 		}
 		return false;
@@ -83,8 +126,9 @@ public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	public boolean addAll(Collection<? extends E> elements) {
 		boolean result = false;
 		for(E element : elements) {
-			if(add(element)) 
+			if(add(element)) {
 				result = true;
+			}
 		}
 		return result;
 	}
@@ -93,6 +137,7 @@ public class IndexedSet<E extends Indexable<I>, I> implements Set<E> {
 	public void clear() {
 		contents.clear();
 		index.clear();
+		index2.clear();
 	}
 
 	@Override

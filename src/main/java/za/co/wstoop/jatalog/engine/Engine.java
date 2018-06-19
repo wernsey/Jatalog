@@ -196,7 +196,7 @@ public abstract class Engine {
             // Positive rule: Match each fact to the first goal.
             // If the fact matches: If it is the last/only goal then we can return the bindings
             // as an answer, otherwise we recursively check the remaining goals.
-            for(Expr fact : facts.getIndexed(goal.getPredicate())) {
+            for(Expr fact : facts.getIndexed(goal.getPredicate(), goal.getTerms())) {
                 Map<String, Term> newBindings = new StackMap<String, Term>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     if(lastGoal) {
@@ -217,7 +217,7 @@ public abstract class Engine {
             if(bindings != null) {
                 goal = goal.substitute(bindings);
             }
-            for(Expr fact : facts.getIndexed(goal.getPredicate())) {
+            for(Expr fact : facts.getIndexed(goal.getPredicate(), goal.getTerms())) {
                 Map<String, Term> newBindings = new StackMap<String, Term>(bindings);
                 if(fact.unify(goal, newBindings)) {
                     return Collections.emptyList();
