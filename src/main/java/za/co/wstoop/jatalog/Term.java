@@ -1,5 +1,7 @@
 package za.co.wstoop.jatalog;
 
+import me.xdrop.fuzzywuzzy.FuzzySearch;
+
 /**
  * A term object is either a value or a variable.
  */
@@ -21,6 +23,24 @@ public class Term {
       this.term = term;
     }
     this.isVariable = isVariable;
+  }
+
+  public boolean fuzzyEquals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof Term)) {
+      return false;
+    }
+    Term t = (Term) o;
+    if (isVariable != t.isVariable) {
+      return false;
+    }
+    if (isVariable) {
+      return term.equals(t.term);
+    }
+    int ratio = FuzzySearch.tokenSetRatio(term, t.term);
+    return ratio > 85;
   }
 
   @Override

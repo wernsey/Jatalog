@@ -111,20 +111,20 @@ public class Expr implements Indexable<String> {
             Term term1 = this.terms.get(i);
             Term term2 = that.terms.get(i);
             if(term1.isVariable()) {
-                if(!term1.equals(term2)) {
+                if(!term1.fuzzyEquals(term2)) {
                     if(!bindings.containsKey(term1.value())) {
                         bindings.put(term1.value(), term2);
-                    } else if (!bindings.get(term1.value()).equals(term2)) {
+                    } else if (!bindings.get(term1.value()).fuzzyEquals(term2)) {
                         return false;
                     }
                 }
             } else if(term2.isVariable()) {
                 if(!bindings.containsKey(term2.value())) {
                     bindings.put(term2.value(), term1);
-                } else if (!bindings.get(term2.value()).equals(term1)) {
+                } else if (!bindings.get(term2.value()).fuzzyEquals(term1)) {
                     return false;
                 }
-            } else if (!term1.equals(term2)) {
+            } else if (!term1.fuzzyEquals(term2)) {
                 return false;
             }
         }
@@ -189,7 +189,7 @@ public class Expr implements Indexable<String> {
 					double d2 = Double.parseDouble(term2.value());
 					return d1 == d2;
 				} else {
-					return term1.equals(term2);
+					return term1.fuzzyEquals(term2);
 				}
             }
         } else {
@@ -208,7 +208,7 @@ public class Expr implements Indexable<String> {
                             double d2 = Double.parseDouble(term2.value());
                             return d1 != d2;
                     } else {
-                        return !term1.equals(term2);
+                        return !term1.fuzzyEquals(term2);
                     }
                 } else {
                     // Ordinary comparison operator
@@ -256,7 +256,7 @@ public class Expr implements Indexable<String> {
             return false;
         }
         for(int i = 0; i < terms.size(); i++) {
-            if(!terms.get(i).equals(that.terms.get(i))) {
+            if(!terms.get(i).fuzzyEquals(that.terms.get(i))) {
                 return false;
             }
         }

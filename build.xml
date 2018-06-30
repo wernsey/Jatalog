@@ -3,7 +3,7 @@
 
 	<!-- Maven is main build tool for this project, but the Ant build file is provided
 	   for convenience. As such, it is not concerned with unit testing and code coverage -->
-	    
+
 	<property name="version" value="0.9"/>
 	<property name="src" location="src/main/java"/>
 	<property name="test" location="src/test/java"/>
@@ -11,7 +11,7 @@
 	<property name="reports" location="build/reports"/>
 	<property name="dist" location="dist"/>
 	<property name="docs" location="docs"/>
-	
+
 	<target name="init">
 		<tstamp/>
 		<mkdir dir="${build}"/>
@@ -19,28 +19,32 @@
 	</target>
 
 	<target name="compile" depends="init">
-		<javac includeantruntime="false" target="1.8" srcdir="${src}" destdir="${build}" />
+		<javac includeantruntime="false" target="1.8" srcdir="${src}" destdir="${build}">
+			<classpath location="lib/fuzzywuzzy-1.1.10.jar" />
+		</javac>
 	</target>
 
-	<!-- 
-	If you want to run the unit tests with Ant, place these files 
+	<!--
+	If you want to run the unit tests with Ant, place these files
 	in a ./lib/ directory:
-	junit-4.12.jar hamcrest-core-1.3.jar  
-	https://github.com/junit-team/junit4/releases 
+	junit-4.12.jar hamcrest-core-1.3.jar
+	https://github.com/junit-team/junit4/releases
 	http://search.maven.org/#search|gav|1|g:"org.hamcrest" AND a:"hamcrest-core"
 	-->
 	<target name="compile-test" depends="compile">
 		<javac includeantruntime="false" target="1.8" srcdir="${test}" destdir="${build}" >
 			<classpath location="lib/junit-4.12.jar" />
+			<classpath location="lib/fuzzywuzzy-1.1.10.jar" />
 		</javac>
 	</target>
 	<target name="test" depends="compile-test,dist">
 		<mkdir dir="${reports}" />
 		<junit printsummary="yes" haltonfailure="yes">
 			<classpath location="${build}" />
-			<!-- Make sure these two libraries are included -->
+			<!-- Make sure these three libraries are included -->
 			<classpath location="lib/junit-4.12.jar" />
 			<classpath location="lib/hamcrest-core-1.3.jar" />
+			<classpath location="lib/fuzzywuzzy-1.1.10.jar" />
 			<batchtest fork="yes" todir="${reports}">
 				<formatter type="plain" />
 				<fileset dir="${test}">
