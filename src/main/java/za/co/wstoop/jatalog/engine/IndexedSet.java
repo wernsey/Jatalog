@@ -177,6 +177,7 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 
   private void reindex() {
     index = new HashMap<>();
+    index2 = new HashMap<>();
     for (E element : contents) {
       Set<E> elements = index.get(element.index());
       if (elements == null) {
