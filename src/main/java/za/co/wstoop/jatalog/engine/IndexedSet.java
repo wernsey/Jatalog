@@ -8,10 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import me.xdrop.fuzzywuzzy.FuzzySearch;
-import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 import za.co.wstoop.jatalog.Expr;
 import za.co.wstoop.jatalog.Term;
 
@@ -27,7 +24,6 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 
   private Map<String, Set<E>> index;
   private Map<String, Set<E>> index2;
-  private Map<String, Set<String>> index3;
 
   /**
    * Default constructor.
@@ -35,7 +31,6 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
   public IndexedSet() {
     index = new HashMap<>();
     index2 = new HashMap<>();
-    index3 = new HashMap<>();
     contents = new HashSet<>();
   }
 
@@ -64,29 +59,15 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
   }
 
   public Set<E> getIndexed(String key, List<Term> terms) {
-
     Set<E> set = new HashSet<>();
     boolean hasFixedPoint = false;
-
     for (int i = 0; i < terms.size(); i++) {
-
       Term term = terms.get(i);
       if (!term.isVariable()) {
-
-        String prefixKey = key + "_" + Integer.toString(i, 10);
-        if (index3.containsKey(prefixKey)) {
-
-          List<ExtractedResult> results = FuzzySearch.extractSorted(term.value(), index3.get
-              (prefixKey));
-          Set<String> keys = results.stream().filter(r -> r.getScore() > 85).map(r -> prefixKey +
-              "_" + r.getString()).collect(Collectors.toSet());
-          keys.forEach(k -> {
-            if (index2.containsKey(k)) {
-              set.addAll(index2.get(k));
-            }
-          });
+        String k = key + "_" + Integer.toString(i, 10) + "_" + term.value();
+        if (index2.containsKey(k)) {
+          set.addAll(index2.get(k));
         }
-
         hasFixedPoint = true;
       }
     }
@@ -128,7 +109,6 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
     contents.clear();
     index.clear();
     index2.clear();
-    index3.clear();
   }
 
   @Override
@@ -198,7 +178,6 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
   private void reindex() {
     index = new HashMap<>();
     index2 = new HashMap<>();
-    index3 = new HashMap<>();
     for (E element : contents) {
       Set<E> elements = index.get(element.index());
       if (elements == null) {
@@ -212,16 +191,10 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
 
   private void indexTerms(E element) {
     for (int i = 0; i < element.getTerms().size(); i++) {
-
       Set<E> es;
-      Set<String> ss;
-
       Term term = element.getTerms().get(i);
       if (!term.isVariable()) {
-
-        String prefixKey = element.index() + "_" + Integer.toString(i, 10);
-        String key = prefixKey + "_" + term.value();
-
+        String key = element.index() + "_" + Integer.toString(i, 10) + "_" + term.value();
         if (index2.containsKey(key)) {
           es = index2.get(key);
         } else {
@@ -229,14 +202,6 @@ public class IndexedSet<E extends Expr, I extends Object> implements Set<E> {
           index2.put(key, es);
         }
         es.add(element);
-
-        if (index3.containsKey(prefixKey)) {
-          ss = index3.get(prefixKey);
-        } else {
-          ss = new HashSet<>();
-          index3.put(prefixKey, ss);
-        }
-        ss.add(term.value());
       }
     }
   }
