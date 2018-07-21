@@ -307,6 +307,9 @@ public class Expr implements Indexable<String> {
         if ("ABS".equals(function)) {
             return evalAbs(bindings);
         }
+        if ("STRLEN".equals(function)) {
+            return evalStrlen(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -339,18 +342,12 @@ public class Expr implements Indexable<String> {
                 return term1.equals(term2);
             }
             if (term1.isVariable()) {
-                if (bindings.containsKey(term1.value())) {
-                    bindings.put(term1.value(), term2);
-                    return true;
-                }
-                return false;
+                bindings.put(term1.value(), term2);
+                return true;
             }
             if (term2.isVariable()) {
-                if (bindings.containsKey(term2.value())) {
-                    bindings.put(term2.value(), term1);
-                    return true;
-                }
-                return false;
+                bindings.put(term2.value(), term1);
+                return true;
             }
         }
         throw new RuntimeException("Function evaluation failed.");
@@ -974,6 +971,40 @@ public class Expr implements Indexable<String> {
                 if (Parser.tryParseDouble(term1.value())) {
                     double d = Double.parseDouble(term1.value());
                     Term term = new Term(Double.toString(Math.abs(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * STRLEN(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ length of string X. Otherwise, True. If Y is free, Y
+     * is bound to length of string X.
+     */
+    private boolean evalStrlen(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (!Parser.tryParseDouble(term1.value())) {
+                    Term term = new Term(Double.toString(term1.value().length()));
                     if (term2.isVariable()) {
                         bindings.put(term2.value(), term);
                         return true;
