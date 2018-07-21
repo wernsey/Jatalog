@@ -268,6 +268,45 @@ public class Expr implements Indexable<String> {
         if ("LEQ".equals(function)) {
             return evalLeq(bindings);
         }
+        if ("PLUS".equals(function)) {
+            return evalPlus(bindings);
+        }
+        if ("TIMES".equals(function)) {
+            return evalTimes(bindings);
+        }
+        if ("MINUS".equals(function)) {
+            return evalMinus(bindings);
+        }
+        if ("DIV".equals(function)) {
+            return evalDiv(bindings);
+        }
+        if ("MOD".equals(function)) {
+            return evalMod(bindings);
+        }
+        if ("POW".equals(function)) {
+            return evalPow(bindings);
+        }
+        if ("EXP".equals(function)) {
+            return evalExp(bindings);
+        }
+        if ("SQRT".equals(function)) {
+            return evalSqrt(bindings);
+        }
+        if ("LOG".equals(function)) {
+            return evalLog(bindings);
+        }
+        if ("CEIL".equals(function)) {
+            return evalCeil(bindings);
+        }
+        if ("FLOOR".equals(function)) {
+            return evalFloor(bindings);
+        }
+        if ("ROUND".equals(function)) {
+            return evalRound(bindings);
+        }
+        if ("ABS".equals(function)) {
+            return evalAbs(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -467,6 +506,480 @@ public class Expr implements Indexable<String> {
                     return d1 <= d2;
                 }
                 return term1.value().compareTo(term2.value()) <= 0;
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * PLUS(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X + Y. Otherwise True. If Z is free, Z is bound to X + Y.
+     */
+    private boolean evalPlus(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(d1 + d2));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * TIMES(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X * Y. Otherwise True. If Z is free, Z is bound to X * Y.
+     */
+    private boolean evalTimes(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(d1 * d2));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * MINUS(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X - Y. Otherwise True. If Z is free, Z is bound to X - Y.
+     */
+    private boolean evalMinus(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(d1 - d2));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * DIV(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X / Y. Otherwise True. If Z is free, Z is bound to X / Y.
+     */
+    private boolean evalDiv(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(d1 / d2));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * MOD(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X mod Y. Otherwise True. If Z is free, Z is bound to
+     * X mod Y.
+     */
+    private boolean evalMod(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(d1 % d2));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * POW(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ X ^ Y. Otherwise True. If Z is free, Z is bound to X ^ Y.
+     */
+    private boolean evalPow(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    Term term = new Term(Double.toString(Math.pow(d1, d2)));
+                    if (term3.isVariable()) {
+                        bindings.put(term3.value(), term);
+                        return true;
+                    }
+                    return term3.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * EXP(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ e ^ X. Otherwise True. If Y is free, Y is bound to e ^ X.
+     */
+    private boolean evalExp(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.exp(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * SQRT(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ √X. Otherwise True. If Y is free, Y is bound to √X.
+     */
+    private boolean evalSqrt(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.sqrt(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LOG(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ ln X. Otherwise True. If Y is free, Y is bound to ln X.
+     */
+    private boolean evalLog(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.log(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * CEIL(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ ⌈X⌉. Otherwise True. If Y is free, Y is bound to ⌈X⌉.
+     */
+    private boolean evalCeil(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.ceil(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * FLOOR(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ ⌊X⌋. Otherwise True. If Y is free, Y is bound to ⌊X⌋.
+     */
+    private boolean evalFloor(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.floor(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * ROUND(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ |X|. Otherwise True. If Y is free, Y is bound to |X|.
+     */
+    private boolean evalRound(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.round(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * ABS(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ abs(X). Otherwise True. If Y is free, Y is bound to
+     * abs(X).
+     */
+    private boolean evalAbs(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                if (Parser.tryParseDouble(term1.value())) {
+                    double d = Double.parseDouble(term1.value());
+                    Term term = new Term(Double.toString(Math.abs(d)));
+                    if (term2.isVariable()) {
+                        bindings.put(term2.value(), term);
+                        return true;
+                    }
+                    return term2.equals(term);
+                }
             }
         }
         throw new RuntimeException("Function evaluation failed.");
