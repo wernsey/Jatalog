@@ -433,7 +433,7 @@ public class Expr implements Indexable<String> {
                 if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
                     double d1 = Double.parseDouble(term1.value());
                     double d2 = Double.parseDouble(term2.value());
-                    return d1 != d2;
+                    return d1 >= d2;
                 }
                 return term1.value().compareTo(term2.value()) >= 0;
             }
@@ -464,7 +464,7 @@ public class Expr implements Indexable<String> {
                 if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
                     double d1 = Double.parseDouble(term1.value());
                     double d2 = Double.parseDouble(term2.value());
-                    return d1 != d2;
+                    return d1 <= d2;
                 }
                 return term1.value().compareTo(term2.value()) <= 0;
             }
