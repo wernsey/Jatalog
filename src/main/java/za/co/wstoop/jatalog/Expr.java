@@ -102,9 +102,7 @@ public class Expr implements Indexable<String> {
      * @return true if the expression is a built-in function.
      */
     public boolean isFunction() {
-        char c1 = predicate.charAt(0);
-        char c2 = predicate.charAt(1);
-        return (c1 == 'f' || c1 == 'F') && (c2 == 'n' || c2 == 'N');
+        return predicate.toUpperCase().startsWith("FN_");
     }
 
     /**
@@ -253,20 +251,47 @@ public class Expr implements Indexable<String> {
     public boolean evalBuiltInFunction(Map<String, Term> bindings) {
         String function = getFunction();
         if ("SAME".equals(function)) {
+            return evalSame(bindings);
+        }
+        if ("DISTINCT".equals(function)) {
+            return evalDistinct(bindings);
+        }
+        if ("GT".equals(function)) {
+            return evalGt(bindings);
+        }
+        if ("LT".equals(function)) {
+            return evalLt(bindings);
+        }
+        if ("GEQ".equals(function)) {
+            return evalGeq(bindings);
+        }
+        if ("LEQ".equals(function)) {
+            return evalLeq(bindings);
+        }
+        throw new RuntimeException("Unimplemented built-in function " + predicate);
+    }
 
-            // SAME(X, Y) : False if X and Y are bound and X ≠ Y. Otherwise True. If variable X is
-            // free then, X is bound to Y's value. Similarly if Y is free.
+    /**
+     * SAME(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if X and Y are bound and X ≠ Y. Otherwise True. If variable X is free then,
+     * X is bound to Y's value. Similarly if Y is free.
+     */
+    private boolean evalSame(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
             Term term1 = terms.get(0);
             Term term2 = terms.get(1);
 
-            if(term1.isVariable() && bindings.containsKey(term1.value())) {
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
                 term1 = bindings.get(term1.value());
             }
-            if(term2.isVariable() && bindings.containsKey(term2.value())) {
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
                 term2 = bindings.get(term2.value());
             }
 
-            if (!term1.isVariable() && ! term2.isVariable()) {
+            if (!term1.isVariable() && !term2.isVariable()) {
                 if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
                     double d1 = Double.parseDouble(term1.value());
                     double d2 = Double.parseDouble(term2.value());
@@ -289,11 +314,166 @@ public class Expr implements Indexable<String> {
                 return false;
             }
         }
-        throw new RuntimeException("Unimplemented built-in function " + predicate);
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * DISTINCT(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return True if X ≠ Y, otherwise False.
+     */
+    private boolean evalDistinct(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 != d2;
+                }
+                return !term1.equals(term2);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * GT(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return True if X > Y, otherwise False.
+     */
+    private boolean evalGt(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 > d2;
+                }
+                return term1.value().compareTo(term2.value()) > 0;
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LT(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return True if X < Y, otherwise False.
+     */
+    private boolean evalLt(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 < d2;
+                }
+                return term1.value().compareTo(term2.value()) < 0;
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * GEQ(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return True if X ≥ Y, otherwise False.
+     */
+    private boolean evalGeq(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 != d2;
+                }
+                return term1.value().compareTo(term2.value()) >= 0;
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LEQ(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return True if X ≤ Y, otherwise False.
+     */
+    private boolean evalLeq(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 != d2;
+                }
+                return term1.value().compareTo(term2.value()) <= 0;
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
     }
 
     private String getFunction() {
-        return isFunction() ? getPredicate().substring(2).toUpperCase() : getPredicate();
+        return isFunction() ? getPredicate().substring(3).toUpperCase() : getPredicate();
     }
 
     public String getPredicate() {
