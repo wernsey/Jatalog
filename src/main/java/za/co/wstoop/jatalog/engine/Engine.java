@@ -191,6 +191,19 @@ public abstract class Engine {
             return Collections.emptyList();
         }
 
+        if (goal.isFunction()) {
+            Map<String, Term> newBindings = new StackMap<>(bindings);
+            boolean eval = goal.evalBuiltInFunction(newBindings);
+            if (eval && !goal.isNegated() || !eval && goal.isNegated()) {
+                if (lastGoal) {
+                    return Collections.singletonList(newBindings);
+                } else {
+                    return matchGoals(goals.subList(1, goals.size()), facts, newBindings);
+                }
+            }
+            return Collections.emptyList();
+        }
+
         Collection<Map<String, Term>> answers = new ArrayList<>();
         if(!goal.isNegated()) {
             // Positive rule: Match each fact to the first goal.

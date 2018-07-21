@@ -98,6 +98,16 @@ public class Expr implements Indexable<String> {
     }
 
     /**
+     * Checks whether an expression represents one of the supported built-in functions.
+     * @return true if the expression is a built-in function.
+     */
+    public boolean isFunction() {
+        char c1 = predicate.charAt(0);
+        char c2 = predicate.charAt(1);
+        return (c1 == 'f' || c1 == 'F') && (c2 == 'n' || c2 == 'N');
+    }
+
+    /**
      * Unifies {@code this} expression with another expression.
      * @param that The expression to unify with
      * @param bindings The bindings of variables to values after unification
@@ -234,7 +244,58 @@ public class Expr implements Indexable<String> {
         }
         throw new RuntimeException("Unimplemented built-in predicate " + predicate);
     }
-    
+
+    /**
+     * Evaluates a built-in predicate. Replace the variables with the values in bindings.
+     * @param bindings bindings A map of variable bindings.
+     * @return true if the operator matched.
+     */
+    public boolean evalBuiltInFunction(Map<String, Term> bindings) {
+        String function = getFunction();
+        if ("SAME".equals(function)) {
+
+            // SAME(X, Y) : False if X and Y are bound and X ≠ Y. Otherwise True. If variable X is
+            // free then, X is bound to Y's value. Similarly if Y is free.
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if(term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if(term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && ! term2.isVariable()) {
+                if (Parser.tryParseDouble(term1.value()) && Parser.tryParseDouble(term2.value())) {
+                    double d1 = Double.parseDouble(term1.value());
+                    double d2 = Double.parseDouble(term2.value());
+                    return d1 == d2;
+                }
+                return term1.equals(term2);
+            }
+            if (term1.isVariable()) {
+                if (bindings.containsKey(term1.value())) {
+                    bindings.put(term1.value(), term2);
+                    return true;
+                }
+                return false;
+            }
+            if (term2.isVariable()) {
+                if (bindings.containsKey(term2.value())) {
+                    bindings.put(term2.value(), term1);
+                    return true;
+                }
+                return false;
+            }
+        }
+        throw new RuntimeException("Unimplemented built-in function " + predicate);
+    }
+
+    private String getFunction() {
+        return isFunction() ? getPredicate().substring(2).toUpperCase() : getPredicate();
+    }
+
     public String getPredicate() {
 		return predicate;
 	}
