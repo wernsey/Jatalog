@@ -310,6 +310,12 @@ public class Expr implements Indexable<String> {
         if ("STRLEN".equals(function)) {
             return evalStrlen(bindings);
         }
+        if ("INDEXOF".equals(function)) {
+            return evalIndexOf(bindings);
+        }
+        if ("LASTINDEXOF".equals(function)) {
+            return evalLastIndexOf(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -1003,14 +1009,86 @@ public class Expr implements Indexable<String> {
             }
 
             if (!term1.isVariable()) {
-                if (!Parser.tryParseDouble(term1.value())) {
-                    Term term = new Term(Double.toString(term1.value().length()));
-                    if (term2.isVariable()) {
-                        bindings.put(term2.value(), term);
-                        return true;
-                    }
-                    return term2.equals(term);
+                Term term = new Term(Double.toString(term1.value().length()));
+                if (term2.isVariable()) {
+                    bindings.put(term2.value(), term);
+                    return true;
                 }
+                return term2.equals(term);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * INDEXOF(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Y does not occur at position Z in the string X. Otherwise,
+     * True. If Z is free, Z is bound to the position at which Y first occurs in the string X.
+     */
+    private boolean evalIndexOf(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                double index = term1.value().indexOf(term2.value());
+                if (term3.isVariable()) {
+                    Term term = new Term(Double.toString(index));
+                    bindings.put(term3.value(), term);
+                    return true;
+                }
+                return Parser.tryParseDouble(term3.value()) && index == Double.parseDouble(term3.value());
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LASTINDEXOF(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Y does not occur at position Z in the string X. Otherwise,
+     * True. If Z is free, Z is bound to the position at which Y first occurs in the string X.
+     */
+    private boolean evalLastIndexOf(Map<String, Term> bindings) {
+        if (arity() == 3) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                double index = term1.value().lastIndexOf(term2.value());
+                if (term3.isVariable()) {
+                    Term term = new Term(Double.toString(index));
+                    bindings.put(term3.value(), term);
+                    return true;
+                }
+                return Parser.tryParseDouble(term3.value()) && index == Double.parseDouble(term3.value());
             }
         }
         throw new RuntimeException("Function evaluation failed.");
