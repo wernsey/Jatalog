@@ -328,6 +328,9 @@ public class Expr implements Indexable<String> {
         if ("CONCAT".equals(function)) {
             return evalConcat(bindings);
         }
+        if ("LIKE".equals(function)) {
+            return evalLike(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -1236,6 +1239,32 @@ public class Expr implements Indexable<String> {
                     return true;
                 }
                 return term3.equals(term);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LIKE(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if X does not contain the string Y. Otherwise, True.
+     */
+    private boolean evalLike(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                return term1.value().contains(term2.value());
             }
         }
         throw new RuntimeException("Function evaluation failed.");
