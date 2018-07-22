@@ -323,7 +323,7 @@ public class Expr implements Indexable<String> {
             return evalUpper(bindings);
         }
         if ("TRIM".equals(function)) {
-            return evalUpper(bindings);
+            return evalTrim(bindings);
         }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
