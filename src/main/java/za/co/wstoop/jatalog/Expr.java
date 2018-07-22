@@ -325,6 +325,9 @@ public class Expr implements Indexable<String> {
         if ("TRIM".equals(function)) {
             return evalTrim(bindings);
         }
+        if ("CONCAT".equals(function)) {
+            return evalConcat(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -1170,7 +1173,7 @@ public class Expr implements Indexable<String> {
     }
 
     /**
-     * UPPER(X, Y)
+     * TRIM(X, Y)
      *
      * @param bindings A map of variable bindings
      * @return False if Y is bound and Y ≠ string X (without leading and trailing white-spaces).
@@ -1197,6 +1200,42 @@ public class Expr implements Indexable<String> {
                     return true;
                 }
                 return term2.equals(term);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * CONCAT(X, Y, Z)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Z is bound and Z ≠ concatenation of the strings X, Y. Otherwise, True. If
+     * Z is free, Z is bound to the concatenation of the strings X, Y.
+     */
+    private boolean evalConcat(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable()) {
+                Term term = new Term(term1.value() + term2.value());
+                if (term3.isVariable()) {
+                    bindings.put(term3.value(), term);
+                    return true;
+                }
+                return term3.equals(term);
             }
         }
         throw new RuntimeException("Function evaluation failed.");
