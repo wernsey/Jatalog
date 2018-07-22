@@ -316,6 +316,15 @@ public class Expr implements Indexable<String> {
         if ("LASTINDEXOF".equals(function)) {
             return evalLastIndexOf(bindings);
         }
+        if ("LOWER".equals(function)) {
+            return evalLower(bindings);
+        }
+        if ("UPPER".equals(function)) {
+            return evalUpper(bindings);
+        }
+        if ("TRIM".equals(function)) {
+            return evalUpper(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -1089,6 +1098,105 @@ public class Expr implements Indexable<String> {
                     return true;
                 }
                 return Parser.tryParseDouble(term3.value()) && index == Double.parseDouble(term3.value());
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * LOWER(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ string X (where all upper-case characters are converted
+     * to lower-case). Otherwise, True. If Y is free, Y = X with all characters in X converted to
+     * lower-case equivalents.
+     */
+    private boolean evalLower(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                Term term = new Term(term1.value().toLowerCase());
+                if (term2.isVariable()) {
+                    bindings.put(term2.value(), term);
+                    return true;
+                }
+                return term2.equals(term);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * UPPER(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ string X (where all lower-case characters are converted
+     * to upper-case). Otherwise, True. If Y is free, Y is bound to X's value with all characters
+     * in X converted to upper-case equivalents.
+     */
+    private boolean evalUpper(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                Term term = new Term(term1.value().toUpperCase());
+                if (term2.isVariable()) {
+                    bindings.put(term2.value(), term);
+                    return true;
+                }
+                return term2.equals(term);
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * UPPER(X, Y)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if Y is bound and Y ≠ string X (without leading and trailing white-spaces).
+     * Otherwise, True. If Y is free, Y is bound to X's value without leading and trailing
+     * white-spaces.
+     */
+    private boolean evalTrim(Map<String, Term> bindings) {
+        if (arity() == 2) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+
+            if (!term1.isVariable()) {
+                Term term = new Term(term1.value().trim());
+                if (term2.isVariable()) {
+                    bindings.put(term2.value(), term);
+                    return true;
+                }
+                return term2.equals(term);
             }
         }
         throw new RuntimeException("Function evaluation failed.");
