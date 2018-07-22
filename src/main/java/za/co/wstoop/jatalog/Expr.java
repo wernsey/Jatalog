@@ -1070,7 +1070,7 @@ public class Expr implements Indexable<String> {
     }
 
     /**
-     * LASTINDEXOF(X, Y)
+     * LASTINDEXOF(X, Y, Z)
      *
      * @param bindings A map of variable bindings
      * @return False if Z is bound and Y does not occur at position Z in the string X. Otherwise,
@@ -1213,7 +1213,7 @@ public class Expr implements Indexable<String> {
      * Z is free, Z is bound to the concatenation of the strings X, Y.
      */
     private boolean evalConcat(Map<String, Term> bindings) {
-        if (arity() == 2) {
+        if (arity() == 3) {
 
             Term term1 = terms.get(0);
             Term term2 = terms.get(1);
