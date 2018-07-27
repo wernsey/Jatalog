@@ -331,6 +331,9 @@ public class Expr implements Indexable<String> {
         if ("LIKE".equals(function)) {
             return evalLike(bindings);
         }
+        if ("SUBSTR".equals(function)) {
+            return evalSubstr(bindings);
+        }
         throw new RuntimeException("Unimplemented built-in function " + predicate);
     }
 
@@ -1265,6 +1268,52 @@ public class Expr implements Indexable<String> {
 
             if (!term1.isVariable() && !term2.isVariable()) {
                 return term1.value().contains(term2.value());
+            }
+        }
+        throw new RuntimeException("Function evaluation failed.");
+    }
+
+    /**
+     * SUBSTR(X, Y, Z, W)
+     *
+     * @param bindings A map of variable bindings
+     * @return False if W is bound and W ≠ substring of X from position Y to position Z. Otherwise,
+     * True. If W is free, W is bound to substring of X from position Y to position Z.
+     */
+    private boolean evalSubstr(Map<String, Term> bindings) {
+        if (arity() == 4) {
+
+            Term term1 = terms.get(0);
+            Term term2 = terms.get(1);
+            Term term3 = terms.get(2);
+            Term term4 = terms.get(3);
+
+            if (term1.isVariable() && bindings.containsKey(term1.value())) {
+                term1 = bindings.get(term1.value());
+            }
+            if (term2.isVariable() && bindings.containsKey(term2.value())) {
+                term2 = bindings.get(term2.value());
+            }
+            if (term3.isVariable() && bindings.containsKey(term3.value())) {
+                term3 = bindings.get(term3.value());
+            }
+            if (term4.isVariable() && bindings.containsKey(term4.value())) {
+                term4 = bindings.get(term4.value());
+            }
+
+            if (!term1.isVariable() && !term2.isVariable() && !term3.isVariable()) {
+
+                int begin = Integer.parseInt(term2.value(), 10);
+                int end = Integer.parseInt(term3.value(), 10);
+
+                if (begin >= 0 && begin <= end && end < term1.value().length()) {
+                    Term term = new Term(term1.value().substring(begin, end));
+                    if (term4.isVariable()) {
+                        bindings.put(term4.value(), term);
+                        return true;
+                    }
+                    return term4.equals(term);
+                }
             }
         }
         throw new RuntimeException("Function evaluation failed.");
