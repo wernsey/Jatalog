@@ -4,6 +4,6 @@ parent(alice, betty).
 parent(bob, betty).
 
 sibling(X, Y) :- parent(A, X), parent(A, Y), X <> Y.
-samechild(A) :- parent(A, Y), parent(B, Z), FNSAME(Y, Z).
+samechild(A) :- parent(A, Y), parent(B, Z), fn_same(Y, Z).
 
 samechild(A)?
