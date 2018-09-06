@@ -34,17 +34,25 @@ public class Shell {
     public static void main(String... args) {
 
         if(args.length > 0) {
-            // Read input from a file...
-            try {
-                Jatalog jatalog = new Jatalog();
-                QueryOutput qo = new DefaultQueryOutput();
-                for (String arg : args) {
-                    try (Reader reader = new BufferedReader(new FileReader(arg))) {
-                        jatalog.executeAll(reader, qo);
+            // Command for exporting Rules
+            if("export-rules".equals(args[0])) {
+                // Second arg is the rule file
+                // Third arg is the export file (HTML)
+                ExportRules er = new ExportRules();
+                er.exportToHtml(args[1]);
+            } else {
+                // Read input from a file...
+                try {
+                    Jatalog jatalog = new Jatalog();
+                    QueryOutput qo = new DefaultQueryOutput();
+                    for (String arg : args) {
+                        try (Reader reader = new BufferedReader(new FileReader(arg))) {
+                            jatalog.executeAll(reader, qo);
+                        }
                     }
-                }                
-            } catch (DatalogException | IOException e) {
-                e.printStackTrace();
+                } catch (DatalogException | IOException e) {
+                    e.printStackTrace();
+                }
             }
         } else {
             // Get input from command line
